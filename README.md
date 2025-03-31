@@ -1,9 +1,67 @@
-# ACT Friends
+# ACT
 
 ### For friends of Advance
 
-This addon is designed for use within your guild. It’s **strongly advised** that **only officers** download ACT Friends directly and then redistribute it **locally** (e.g., via Discord) to the rest of their guild members.  
-**Why?** Because a small configuration is required for officer access control.
+This addon is designed for use within your guild. It’s **strongly advised** that **only officers** download ACT directly and then redistribute it **locally** (e.g., via Discord) to the rest of their guild.  
+**Why?** Because some small configuration is required for officer access control.
+
+---
+
+## 🧩 Addon Modules
+
+You can open ACT using the `/act` command or by clicking the **Advance minimap icon**.
+
+### 📛 Nicknames
+Adds nickname support to:
+- Default Raid Frames
+- Grid2
+- Cell
+- ElvUI
+- WeakAura `%unit` naming
+- Liquid's WeakAura packs (natively supported due to collaboration with Liquid devs)
+
+> **ElvUI Setup**:  
+Raid frames will auto-import nicknames **except** for ElvUI. You’ll need to manually change your tag options from `[name]` or `[name:...]` to one of the following:
+- `[nickname]`
+- `[nickname:short]`
+- `[nickname:medium]`
+
+How To:  
+`/ec → UnitFrames → Individual/Group Units → (Player/Party/Raid1 etc.) → Name`
+
+---
+
+### 🖱️ Macros
+A collection of commonly used **raid macros**.  
+Clicking an icon generates a macro for that specific **world marker** or **icon**.
+
+---
+
+### 🔀 Split Helper
+Helps ensure players are on the correct characters:
+- Useful for split raids
+- Also helpful for boss-specific setups with frequent swaps
+
+---
+
+### 🧪 Addon Checker
+Checks raid members to verify:
+- Presence of important raid addons
+- Whether those addons are **up-to-date**
+
+---
+
+### 🔁 WeakAura Updater
+Allows you to push **WeakAuras** directly to raid members:
+- No more relying on Discord messages or manual imports
+- Ideal for small auras or individual bosses (e.g., *if you manually updated the Rik Reverb auras from the Liquid package*)
+
+---
+
+### 🔍 Version Checker
+Displays:
+- Who in the raid has ACT installed
+- What version they’re running
 
 ---
 
@@ -11,31 +69,32 @@ This addon is designed for use within your guild. It’s **strongly advised** th
 
 After installing the addon:
 
-1. Open `Nickname.lua`.
-2. Locate the function `IsPrivilegedUser()` (around **line 76**).
-3. Manually input the **BattleTags** of your officers or raid leader.
+1. Open `Nickname.lua`
+2. Locate the function `IsPrivilegedUser()` (around **line 76**)
+3. Manually input the **BattleTags** of your officers or raid leader
 
-> ⚠️ **Note**: You will need to redo this step **each time you update** the addon through WoWUp.
+> ⚠️ **Note**: You’ll need to repeat this step **every time** you update the addon through WoWUp.
 
 ---
 
-## 🧠 Addon Modules & Syntax
+## 🧠 Addon Syntax
 
 ### 📛 Nicknames
 
-Nicknames are imported using the following format:
+Format:
 
 ```
-Nickname: Char1, Char2; Nickname: Char1, Char2, Char3
+Nickname: Char1, Char2; Nickname: Char3, Char4, Char5
 ```
 
 - `:` starts a nickname definition and lists the characters it applies to.
 - `;` starts a new nickname block.
-- The final nickname does **not** need a trailing `;`.
+- The last nickname entry **does not** require a trailing `;`.
 
-**Note**
-- It’s advised officers **push default nicknames** to raiders to prevent them deleting any important nicknames/characters.
-- There is some protection baked in that duplicate characters will automatically be filtered out. Additionally Custom Nicknames from users will be overwritten by Officer's Default Nicknames as they take presedence over Custom ones to prevent raiders from making their own assigments unusable.
+**Notes:**
+- Officers are encouraged to **push default nicknames** to raiders.
+- Duplicate characters are automatically filtered out.
+- **Officer defaults take precedence** over user-added nicknames, preventing raiders from disrupting assignments.
 
 ---
 
@@ -47,8 +106,8 @@ Format:
 Char1, Char2, Char3, Char4, ...
 ```
 
-- Supports up to **30 characters**.
-- Exceeding this limit will show an error message and halt the import.
+- Maximum of **30 characters**.
+- Going over the limit will result in an error message and abort the import.
 
 ---
 
@@ -56,4 +115,4 @@ Char1, Char2, Char3, Char4, ...
 
 - Use this to send **any WeakAura string**.
 - Larger strings (and more players) = longer send time.
-- Recommended for **small WeakAuras** or **single boss encounters**, e.g., *Rik Reverb from the Liquid package*.
+- Best used for **smaller auras** or **single-boss setups**.
