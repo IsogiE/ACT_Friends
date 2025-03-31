@@ -17,11 +17,13 @@ After installing the addon:
 
 > ⚠️ **Note**: You’ll need to repeat this step **every time** you update the addon through WoWUp.
 
+<br>
+
 ---
 
 ## 🧩 Addon Modules
 
-You can open ACT using the `/act` command or by clicking the **Advance minimap icon**.
+You can open ACT using the `/ACT` command or by clicking the **Advance minimap icon**.
 
 ### 📛 Nicknames
 Adds nickname support to:
@@ -31,16 +33,21 @@ Adds nickname support to:
 - ElvUI
 - WeakAura `%unit` naming
 - Liquid's WeakAura packs (natively supported due to collaboration with Liquid devs)
-- MRT Note Assignments for the Liquid WeakAura packs or Liquid Timeline Reminder AddoN (e.g., if my nickname is set to Isogi but I'm playing Itsmeisogixd, entering Isogi in the MRT note will automatically resolve to my character and give it the relevant assignment or cooldown reminder from Timeline Reminders)
+- MRT Note Assignments for the Liquid WeakAura packs or Liquid Timeline Reminder Addon (e.g., if my nickname is set to Isogi but I'm playing Itsmeisogixd, entering Isogi in the MRT note will automatically resolve to my character and give it the relevant assignment or cooldown reminder from Timeline Reminders)
+- MRT Raid Cooldown Bars
 
 > **ElvUI Setup**:  
-Raid frames will auto-import nicknames **except** for ElvUI. You’ll need to manually change your tag options from `[name]` or `[name:...]` to one of the following:
-- `[nickname]`
-- `[nickname:short]`
-- `[nickname:medium]`
+> Raid frames will auto-import nicknames **except** for ElvUI. You’ll need to manually change your tag options from `[name]` or `[name:...]` to one of the following:
+> - `[nickname]`
+> - `[nickname:short]`
+> - `[nickname:medium]`
+> 
+> How To:  
+> `/ec → UnitFrames → Individual/Group Units → (Player/Party/Raid1 etc.) → Name`
 
-How To:  
-`/ec → UnitFrames → Individual/Group Units → (Player/Party/Raid1 etc.) → Name`
+**Notes:**
+- Players that do not have nicknames will automatically return their player character names.
+- If you prefer to display player character names on your Raid Frames or MRT Raid Cooldown Bars for characters that do have nicknames simply do `/ACT → Nicknames → Untick "Show nicknames on Party/Raid Frames & MRT Raid CDs`. All Raid Frames & MRT Raid Cooldown Bars will instead return player names. Unticking this checkbox does not break WeakAuras & (MRT Note) Assignments, they'll continue to resolve nicknames even with this option turned off. 
 
 ---
 
@@ -75,6 +82,8 @@ Allows you to push **WeakAuras** directly to raid members:
 Displays:
 - Who in the raid has ACT installed
 - What version they’re running
+
+<br>
 
 ---
 
