@@ -464,7 +464,7 @@ end
 local f = CreateFrame("Frame")
 f:RegisterEvent("ADDON_LOADED")
 f:SetScript("OnEvent", function(self,event,addon)
-    if addon == "ACT" then
+    if addon == "ACT_Friends" then
         AddonCheckerModule:OnEnable()
     end
 end)

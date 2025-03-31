@@ -12,19 +12,23 @@ _G.VACT = _G.VACT or {}
 local VACT = _G.VACT 
 
 local versionCheckTimer = nil 
-local version = C_AddOns.GetAddOnMetadata("ACT", "Version")
 
 local function OnAddonLoaded(addonName)
-    if addonName == "ACT" then
-        VACT.VersionCheck = VACT.VersionCheck or {}
-        VACT.VersionCheck.responses = {}
+    VACT.VersionCheck = VACT.VersionCheck or {}
+    VACT.VersionCheck.responses = {}
+    ART_VersionCheckDB = ART_VersionCheckDB or {}
 
-        ART_VersionCheckDB = ART_VersionCheckDB or {}
+    if addonName == "ACT_Friends" then
+        local version = C_AddOns.GetAddOnMetadata("ACT_Friends", "Version")
+        ART_VersionCheckDB.version = version .. " (Friends)"
+        VACT.VersionCheck.version = ART_VersionCheckDB.version
+    elseif addonName == "ACT" then
+        local version = C_AddOns.GetAddOnMetadata("ACT", "Version")
         ART_VersionCheckDB.version = version
-
         VACT.VersionCheck.version = ART_VersionCheckDB.version
     end
 end
+
 
 local function compareVersions(v1, v2)
     local v1Parts = {strsplit(".", v1)}
@@ -108,25 +112,32 @@ function VersionCheckerModule:CheckForNonResponders()
 end
 
 function VersionCheckerModule:ShowResults()
-    local highestVersion = VACT.VersionCheck.version
-    for _, ver in pairs(VACT.VersionCheck.responses) do
-        if compareVersions(ver, highestVersion) > 0 then
-            highestVersion = ver
+    local highestVersions = { ACT = nil, ACT_Friends = nil }
+    for player, ver in pairs(VACT.VersionCheck.responses) do
+        if ver ~= "Addon not installed" then
+            local group = ver:find(" %(Friends%)") and "ACT_Friends" or "ACT"
+            local rawVer = ver:gsub(" %(Friends%)", "")
+            if not highestVersions[group] or compareVersions(rawVer, highestVersions[group]) > 0 then
+                highestVersions[group] = rawVer
+            end
         end
     end
 
     local result = ""
     for player, ver in pairs(VACT.VersionCheck.responses) do
-        local color
+        local displayName = Ambiguate(player, "short")
+        local color = ""
         if ver == "Addon not installed" then
-            color = "|cff808080" 
+            color = "|cff808080"
         else
-            color = compareVersions(ver, highestVersion) == 0 and "|cff00ff00" or "|cffff0000"
+            local group = ver:find(" %(Friends%)") and "ACT_Friends" or "ACT"
+            local rawVer = ver:gsub(" %(Friends%)", "")
+            color = (highestVersions[group] and compareVersions(rawVer, highestVersions[group]) == 0) and "|cff00ff00" or "|cffff0000"
             ver = formatVersion(ver)
-        end        
-        local displayName = Ambiguate(player, "short") 
+        end
         result = result .. color .. displayName .. ": " .. ver .. "|r\n"
     end
+
     if self.configPanel and self.configPanel.resultFrame and self.configPanel.resultFrame.text then
         self.configPanel.resultFrame.text:SetText(result)
     end
