@@ -309,6 +309,26 @@ function NicknameModule:CheckImportConflicts(importString)
     return nil
 end
 
+local function isDefaultCharacter(nickname, charName)
+    if not ACT.db.profile.defaultNicknames or ACT.db.profile.defaultNicknames == "" then
+        return false
+    end
+    for entry in string.gmatch(ACT.db.profile.defaultNicknames, "[^;]+") do
+        entry = strtrim(entry)
+        if entry ~= "" then
+            local defNick, defChars = strsplit(":", entry)
+            if defNick and strtrim(defNick):lower() == nickname:lower() then
+                for defaultChar in string.gmatch(defChars, "[^,]+") do
+                    if strtrim(defaultChar):lower() == charName:lower() then
+                        return true
+                    end
+                end
+            end
+        end
+    end
+    return false
+end
+
 function NicknameModule:RefreshContent()
     self:CleanupEmptyNicknames()
     
@@ -385,6 +405,12 @@ function NicknameModule:RefreshContent()
         
         local editBtn = UI:CreateButton(actionsFrame, "Edit", 50, 20, function()
             if dropdown.selectedValue then
+                if isDefaultCharacter(nickname, dropdown.selectedValue) then
+                    self.importErrorMsg:SetText("Error: Cannot edit Default Characters")
+                    C_Timer.After(3, function() self.importErrorMsg:SetText("") end)
+                    return
+                end
+        
                 NicknameModule:ShowCharacterInputPopup(nickname, dropdown.selectedValue, function(newName)
                     if ACT.db.profile.nicknames[nickname] and ACT.db.profile.nicknames[nickname].characters then
                         for i, charData in ipairs(ACT.db.profile.nicknames[nickname].characters) do
@@ -405,6 +431,12 @@ function NicknameModule:RefreshContent()
         
         local deleteBtn = UI:CreateButton(actionsFrame, "Delete", 50, 20, function()
             if dropdown.selectedValue then
+                if isDefaultCharacter(nickname, dropdown.selectedValue) then
+                    self.importErrorMsg:SetText("Error: Cannot delete Default Characters")
+                    C_Timer.After(3, function() self.importErrorMsg:SetText("") end)
+                    return
+                end
+        
                 if ACT.db.profile.nicknames[nickname] and ACT.db.profile.nicknames[nickname].characters then
                     for i, charData in ipairs(ACT.db.profile.nicknames[nickname].characters) do
                         if charData.character == dropdown.selectedValue then
