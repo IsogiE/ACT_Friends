@@ -32,6 +32,7 @@ Adds nickname support to:
 - WeakAura `%unit` naming
 - Liquid's WeakAura packs (natively supported due to collaboration with Liquid devs)
 - MRT Note Assignments for the Liquid WeakAura packs or Liquid Timeline Reminder AddoN (e.g., if my nickname is set to Isogi but I'm playing Itsmeisogixd, entering Isogi in the MRT note will automatically resolve to my character and give it the relevant assignment or cooldown reminder from Timeline Reminders)
+- MRT Raid Cooldown Bars
 
 > **ElvUI Setup**:  
 Raid frames will auto-import nicknames **except** for ElvUI. You’ll need to manually change your tag options from `[name]` or `[name:...]` to one of the following:
@@ -41,6 +42,10 @@ Raid frames will auto-import nicknames **except** for ElvUI. You’ll need to ma
 
 How To:  
 `/ec → UnitFrames → Individual/Group Units → (Player/Party/Raid1 etc.) → Name`
+
+**Notes:**
+- Players that do not have nicknames will automatically return their player character names.
+- If you prefer to display player character names on your Raid Frames or MRT Raid Cooldown Bars for characters that do have nicknames simply do `/ACT → Nicknames → Untick "Show nicknames on Party/Raid Frames & MRT Raid CDs`. All Raid Frames & MRT Raid Cooldown Bars will instead return player names. Unticking this checkbox does not break WeakAuras & (MRT Note) Assignments, they'll continue to resolve nicknames even with this option turned off. 
 
 ---
 
