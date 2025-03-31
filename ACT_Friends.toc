@@ -1,12 +1,12 @@
 ## Interface: 110100
-## Title: Advance Custom Tools
+## Title: Advance Custom Tools (Friends)
 ## Author: Isogi, Jaf
-## Notes: Advance Custom Tools
+## Notes: Advance Custom Tools (Friends)
 ## SavedVariables: ACTDB, VACT
-## Version: 2.7
-## IconTexture: Interface\AddOns\ACT\media\MiniMap.tga
+## Version: 1.0
+## IconTexture: Interface\AddOns\ACT_Friends\media\MiniMap.tga
 ## OptionalDeps: ElvUI, WeakAuras, Cell, Grid2, MRT
-## Category: Advance
+## Category: Advance Friends
 embeds.xml
 libs\AceComm-3.0\AceComm-3.0.xml
 libs\AceTimer-3.0\AceTimer-3.0.xml

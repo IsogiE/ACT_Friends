@@ -35,7 +35,7 @@ function ACT:OpenConfig()
     configFrame.border = CreateFrame("Frame", nil, configFrame, "BackdropTemplate")
     configFrame.border:SetAllPoints()
     configFrame.border:SetBackdrop({
-        edgeFile = "Interface\\AddOns\\ACT\\media\\border", 
+        edgeFile = "Interface\\AddOns\\ACT_Friends\\media\\border", 
         edgeSize = 6,
     })
 
@@ -64,9 +64,9 @@ function ACT:OpenConfig()
         end
     end    
 
-    local vnum = C_AddOns.GetAddOnMetadata("ACT", "Version")
+    local vnum = C_AddOns.GetAddOnMetadata("ACT_Friends", "Version")
     local formatted_version = formatVersion(vnum)
-    versionText:SetText("Version: " .. formatted_version)
+    versionText:SetText("Version: " .. formatted_version .. " (Friends)")
 
     local content = CreateFrame("Frame", nil, configFrame)
     content:SetSize(560, 540)
@@ -207,7 +207,7 @@ function ACT:OnEnable()
 
     local LDB = LibStub("LibDataBroker-1.1"):NewDataObject("ACT", {
         type = "launcher",
-        icon = [[Interface\AddOns\ACT\media\MiniMap.tga]],
+        icon = [[Interface\AddOns\ACT_Friends\media\MiniMap.tga]],
         OnClick = function(clickedframe, button)
             ACT:OpenConfig()
         end,

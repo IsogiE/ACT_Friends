@@ -22,13 +22,13 @@ local function SetIconTexture(icon, statusType, playerVersion, latestVersion)
     if statusType == 0 then
         return
     elseif statusType == 1 then
-        icon:SetTexture("Interface\\AddOns\\ACT\\media\\DiesalGUIcons16x256x128")
+        icon:SetTexture("Interface\\AddOns\\ACT_Friends\\media\\DiesalGUIcons16x256x128")
         icon:SetTexCoord(0.5, 0.5625, 0.5, 0.625)
         icon:SetVertexColor(0.8, 0, 0, 1)
         icon.tooltip = "Missing"
         icon:Show()
     elseif statusType == 2 then
-        icon:SetTexture("Interface\\AddOns\\ACT\\media\\DiesalGUIcons16x256x128")
+        icon:SetTexture("Interface\\AddOns\\ACT_Friends\\media\\DiesalGUIcons16x256x128")
         icon:SetTexCoord(0.5625, 0.625, 0.5, 0.625)
         icon:SetVertexColor(0, 0.8, 0, 1)
         icon.tooltip = "Up-to-date: " .. (playerVersion or "")

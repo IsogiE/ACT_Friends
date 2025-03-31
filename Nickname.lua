@@ -244,7 +244,7 @@ function NicknameModule:CreateConfigPanel(parent)
         officerFrame.border = CreateFrame("Frame", nil, officerFrame, "BackdropTemplate")
         officerFrame.border:SetAllPoints()
         officerFrame.border:SetBackdrop({
-            edgeFile = "Interface\\AddOns\\ACT\\media\\border",
+            edgeFile = "Interface\\AddOns\\ACT_Friends\\media\\border",
             edgeSize = 8,
         })
         

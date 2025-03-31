@@ -25,7 +25,7 @@ function HomeModule:CreateConfigPanel(parent)
     local logo = configPanel:CreateTexture(nil, "ARTWORK")
     logo:SetSize(256, 256)
     logo:SetPoint("TOP", configPanel, "TOP", -120, -50)
-    logo:SetTexture("Interface\\AddOns\\ACT\\media\\logo.tga")
+    logo:SetTexture("Interface\\AddOns\\ACT_Friends\\media\\logo.tga")
     logo:SetTexCoord(0.05, 0.95, 0.05, 0.95)
 
     local info = configPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
