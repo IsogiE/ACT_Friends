@@ -33,7 +33,7 @@ Adds nickname support to:
 - ElvUI
 - WeakAura `%unit` naming
 - Liquid's WeakAura packs (natively supported due to collaboration with Liquid devs)
-- MRT Note Assignments for the Liquid WeakAura packs or Liquid Timeline Reminder AddoN (e.g., if my nickname is set to Isogi but I'm playing Itsmeisogixd, entering Isogi in the MRT note will automatically resolve to my character and give it the relevant assignment or cooldown reminder from Timeline Reminders)
+- MRT Note Assignments for the Liquid WeakAura packs or Liquid Timeline Reminder Addon (e.g., if my nickname is set to Isogi but I'm playing Itsmeisogixd, entering Isogi in the MRT note will automatically resolve to my character and give it the relevant assignment or cooldown reminder from Timeline Reminders)
 - MRT Raid Cooldown Bars
 
 > **ElvUI Setup**:  
