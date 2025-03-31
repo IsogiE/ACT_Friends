@@ -4,8 +4,8 @@ NicknameModule.title = "Nicknames"
 local AceComm = LibStub("AceComm-3.0")
 local LibDeflate = LibStub("LibDeflate")
 
-local PUSH_PREFIX = "ACT_NICK_UPDATE" 
-local KILL_PREFIX = "ACT_KILLSWITCH"
+local PUSH_PREFIX = "ACTF_NICK_UPPY" 
+local KILL_PREFIX = "ACTF_NUKE"
 
 ACT.db = ACT.db or {}
 ACT.db.profile = ACT.db.profile or {}
