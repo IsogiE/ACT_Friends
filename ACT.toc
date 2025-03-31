@@ -1,0 +1,26 @@
+## Interface: 110100
+## Title: Advance Custom Tools
+## Author: Isogi, Jaf
+## Notes: Advance Custom Tools
+## SavedVariables: ACTDB, VACT
+## Version: 2.7
+## IconTexture: Interface\AddOns\ACT\media\MiniMap.tga
+## OptionalDeps: ElvUI, WeakAuras, Cell, Grid2, MRT
+## Category: Advance
+embeds.xml
+libs\AceComm-3.0\AceComm-3.0.xml
+libs\AceTimer-3.0\AceTimer-3.0.xml
+Libs\AceDB-3.0\AceDB-3.0.xml
+Libs\AceEvent-3.0\AceEvent-3.0.xml
+Libs\AceAddon-3.0\AceAddon-3.0.xml
+libs\AceConsole-3.0\AceConsole-3.0.xml
+API.lua
+UI.lua
+Core.lua
+Home.lua
+Nickname.lua
+Macros.lua
+SplitHelper.lua
+AddonChecker.lua
+WAUpdater.lua
+VersionChecker.lua
