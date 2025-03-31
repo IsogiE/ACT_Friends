@@ -18,8 +18,9 @@ After installing the addon:
 > ⚠️ **Note**: You’ll need to repeat this step **every time** you update the addon through WoWUp.
 
 <br>
----
 <br>
+
+---
 
 ## 🧩 Addon Modules
 
@@ -82,10 +83,11 @@ Allows you to push **WeakAuras** directly to raid members:
 Displays:
 - Who in the raid has ACT installed
 - What version they’re running
-- 
+  
 <br>
+<br>
+
 ---
-<br>
 
 ## 🧠 Addon Syntax
 
