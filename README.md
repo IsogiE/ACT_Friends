@@ -7,6 +7,18 @@ This addon is designed for use within your guild. It’s **strongly advised** th
 
 ---
 
+## 🔧 Setup Instructions
+
+After installing the addon:
+
+1. Open `Nickname.lua`
+2. Locate the function `IsPrivilegedUser()` (around **line 76**)
+3. Manually input the **BattleTags** of your officers or raid leader
+
+> ⚠️ **Note**: You’ll need to repeat this step **every time** you update the addon through WoWUp.
+
+---
+
 ## 🧩 Addon Modules
 
 You can open ACT using the `/act` command or by clicking the **Advance minimap icon**.
@@ -62,18 +74,6 @@ Allows you to push **WeakAuras** directly to raid members:
 Displays:
 - Who in the raid has ACT installed
 - What version they’re running
-
----
-
-## 🔧 Setup Instructions
-
-After installing the addon:
-
-1. Open `Nickname.lua`
-2. Locate the function `IsPrivilegedUser()` (around **line 76**)
-3. Manually input the **BattleTags** of your officers or raid leader
-
-> ⚠️ **Note**: You’ll need to repeat this step **every time** you update the addon through WoWUp.
 
 ---
 
