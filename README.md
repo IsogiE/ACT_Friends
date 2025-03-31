@@ -21,7 +21,7 @@ After installing the addon:
 
 ## 🧩 Addon Modules
 
-You can open ACT using the `/act` command or by clicking the **Advance minimap icon**.
+You can open ACT using the `/ACT` command or by clicking the **Advance minimap icon**.
 
 ### 📛 Nicknames
 Adds nickname support to:
@@ -35,13 +35,13 @@ Adds nickname support to:
 - MRT Raid Cooldown Bars
 
 > **ElvUI Setup**:  
-Raid frames will auto-import nicknames **except** for ElvUI. You’ll need to manually change your tag options from `[name]` or `[name:...]` to one of the following:
-- `[nickname]`
-- `[nickname:short]`
-- `[nickname:medium]`
-
-How To:  
-`/ec → UnitFrames → Individual/Group Units → (Player/Party/Raid1 etc.) → Name`
+> Raid frames will auto-import nicknames **except** for ElvUI. You’ll need to manually change your tag options from `[name]` or `[name:...]` to one of the following:
+> - `[nickname]`
+> - `[nickname:short]`
+> - `[nickname:medium]`
+> 
+> How To:  
+> `/ec → UnitFrames → Individual/Group Units → (Player/Party/Raid1 etc.) → Name`
 
 **Notes:**
 - Players that do not have nicknames will automatically return their player character names.
