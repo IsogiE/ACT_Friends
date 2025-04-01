@@ -446,19 +446,34 @@ end
 
 -- Default frames
 local function UpdateDefaultFrames()
-    local function UpdateFrameName(frame)
-        if not frame or not frame.unit or not frame.name then return end
-        if not UnitExists(frame.unit) or not UnitIsPlayer(frame.unit) then return end
-
-        local name = UnitName(frame.unit)
-        if not name then return end
-
-        local displayName = name
-        if ACT and ACT.db and ACT.db.profile and ACT.db.profile.useNicknameIntegration then
-            displayName = NicknameAPI:GetNicknameByCharacter(name) or name
+    local hookedFrames = {}
+    
+    local function HookFrameName(frame)
+        if hookedFrames[frame] or not frame.name then return end
+        
+        frame.name.OriginalSetText = frame.name.SetText
+        frame.name.OriginalGetText = frame.name.GetText
+        
+        frame.name.SetText = function(self, text)
+            if text and ACT and ACT.db.profile.useNicknameIntegration then
+                local nickname = NicknameAPI:GetNicknameByCharacter(text)
+                if nickname then
+                    text = nickname
+                end
+            end
+            self:OriginalSetText(text)
         end
+        
+        hookedFrames[frame] = true
+    end
 
-        frame.name:SetText(displayName)
+    local function UpdateFrameName(frame)
+        if not frame or not frame.unit then return end
+        HookFrameName(frame)
+        
+        if frame.name:GetText() then
+            frame.name:SetText(frame.name:GetText())
+        end
     end
 
     local function UpdateAllFrames()
@@ -484,14 +499,26 @@ local function UpdateDefaultFrames()
         end
     end
 
-    local defaultFrame = CreateFrame("Frame")
-    defaultFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-    defaultFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
-    defaultFrame:SetScript("OnEvent", function(self, event)
-        C_Timer.After(0.1, UpdateAllFrames)
+    local eventFrame = CreateFrame("Frame")
+    eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    eventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
+    eventFrame:RegisterEvent("UNIT_NAME_UPDATE")
+
+    eventFrame:SetScript("OnEvent", function(self, event, unit)
+        if event == "UNIT_NAME_UPDATE" then
+            for i = 1, 40 do
+                local frame = _G["CompactRaidFrame" .. i]
+                if frame and frame.unit == unit then
+                    UpdateFrameName(frame)
+                    break
+                end
+            end
+        else
+            C_Timer.After(0.5, UpdateAllFrames) 
+        end
     end)
-    
-    C_Timer.After(0.1, UpdateAllFrames)
+
+    C_Timer.After(1, UpdateAllFrames)
 end
 
 -- MRT cooldown bars
