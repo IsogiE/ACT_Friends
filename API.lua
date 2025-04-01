@@ -446,22 +446,6 @@ end
 
 -- Default frames
 local function UpdateDefaultFrames()
-    local overlays = {}
-
-    local function CreateOverlay(frame)
-        if not frame or overlays[frame] then return end
-
-        local overlay = frame:CreateFontString(nil, "OVERLAY")
-        overlay:SetFontObject(frame.name:GetFontObject())
-        overlay:SetPoint("LEFT", frame.name, "LEFT")
-        overlay:SetJustifyH("LEFT")
-        overlay:SetWidth(frame:GetWidth() - 8)
-        overlay:SetWordWrap(false)
-
-        overlays[frame] = overlay
-        return overlay
-    end
-
     local function UpdateFrameName(frame)
         if not frame or not frame.unit or not frame.name then return end
         if not UnitExists(frame.unit) or not UnitIsPlayer(frame.unit) then return end
@@ -469,34 +453,12 @@ local function UpdateDefaultFrames()
         local name = UnitName(frame.unit)
         if not name then return end
 
-        if not (ACT and ACT.db and ACT.db.profile and ACT.db.profile.useNicknameIntegration) then
-            frame.name:SetAlpha(1)
-            if overlays[frame] then
-                overlays[frame]:SetText("")
-            end
-            return
+        local displayName = name
+        if ACT and ACT.db and ACT.db.profile and ACT.db.profile.useNicknameIntegration then
+            displayName = NicknameAPI:GetNicknameByCharacter(name) or name
         end
 
-        local nickname = NicknameAPI:GetNicknameByCharacter(name)
-        if nickname then
-            local overlay = overlays[frame] or CreateOverlay(frame)
-            frame.name:SetAlpha(0)
-            if overlay then
-                overlay:SetWidth(frame:GetWidth() - 8)
-                overlay:SetText(nickname)
-            end
-        else
-            frame.name:SetAlpha(1)
-            if overlays[frame] then
-                overlays[frame]:SetText("")
-            end
-        end
-    end
-
-    local function OnFrameResize(frame)
-        if overlays[frame] then
-            overlays[frame]:SetWidth(frame:GetWidth() - 8)
-        end
+        frame.name:SetText(displayName)
     end
 
     local function UpdateAllFrames()
@@ -504,10 +466,6 @@ local function UpdateDefaultFrames()
             local frame = _G["CompactPartyFrameMember" .. i]
             if frame and frame:IsVisible() then
                 UpdateFrameName(frame)
-                if not frame.sizeHooked then
-                    frame:HookScript("OnSizeChanged", OnFrameResize)
-                    frame.sizeHooked = true
-                end
             end
         end
 
@@ -515,20 +473,12 @@ local function UpdateDefaultFrames()
             local frame = _G["CompactRaidFrame" .. i]
             if frame and frame:IsVisible() then
                 UpdateFrameName(frame)
-                if not frame.sizeHooked then
-                    frame:HookScript("OnSizeChanged", OnFrameResize)
-                    frame.sizeHooked = true
-                end
             end
 
             for j = 1, 5 do
                 local groupFrame = _G["CompactRaidGroup" .. i .. "Member" .. j]
                 if groupFrame and groupFrame:IsVisible() then
                     UpdateFrameName(groupFrame)
-                    if not groupFrame.sizeHooked then
-                        groupFrame:HookScript("OnSizeChanged", OnFrameResize)
-                        groupFrame.sizeHooked = true
-                    end
                 end
             end
         end
@@ -537,22 +487,10 @@ local function UpdateDefaultFrames()
     local defaultFrame = CreateFrame("Frame")
     defaultFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
     defaultFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
-
-    defaultFrame:SetScript("OnEvent", function(self, event, ...)
-        if event == "UNIT_NAME_UPDATE" then
-            local unit = ...
-            for i = 1, 40 do
-                local frame = _G["CompactRaidFrame" .. i]
-                if frame and frame.unit == unit then
-                    UpdateFrameName(frame)
-                    break
-                end
-            end
-        else
-            C_Timer.After(0.1, UpdateAllFrames)
-        end
+    defaultFrame:SetScript("OnEvent", function(self, event)
+        C_Timer.After(0.1, UpdateAllFrames)
     end)
-
+    
     C_Timer.After(0.1, UpdateAllFrames)
 end
 
@@ -577,14 +515,12 @@ initFrame:RegisterEvent("ADDON_LOADED")
 
 initFrame:SetScript("OnEvent", function(self, event, arg1)
     if event == "PLAYER_ENTERING_WORLD" and firstLoad ~= "1" then
-        UpdateCellNicknames()
         UpdateDefaultFrames()
-        InitializeMRT()
         firstLoad = "1"
-    elseif event == "ADDON_LOADED" then
-        if arg1 == "Cell" then
+        if C_AddOns.IsAddOnLoaded("Cell") then
             UpdateCellNicknames()
-        elseif arg1 == "MRT" then
+        end
+        if C_AddOns.IsAddOnLoaded("MRT") then
             InitializeMRT()
         end
     end

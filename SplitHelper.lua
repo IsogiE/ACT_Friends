@@ -410,20 +410,35 @@ function SplitHelper:CheckCharacters()
 end
 
 function SplitHelper:ShowRenamePopup(index)
+    if self.renamePopup then
+        self.renamePopup:Hide()
+        self.renamePopup = nil
+        self.renameEditBox = nil
+    end
     local profile = ACT.db.profile.splits.profiles[index]
     local defaultName = profile.name or ""
-    local popup, editBox = UI:CreatePopupWithEditBox("Enter new split name:", 320, 150, defaultName,
+    self.renamePopup, self.renameEditBox = UI:CreatePopupWithEditBox("Enter new split name:", 320, 150, defaultName,
         function(newName)
             if newName and newName ~= "" then
                 ACT.db.profile.splits.profiles[index].name = newName
                 self:UpdateDropdown()
                 self.splitDropdown.button.text:SetText(newName)
             end
+            if self.renamePopup then
+                self.renamePopup:Hide()
+            end
         end,
         function()
+            if self.renamePopup then
+                self.renamePopup:Hide()
+            end
         end
     )
-    popup:Show()
+    self.renamePopup:SetScript("OnHide", function()
+        self.renamePopup = nil
+        self.renameEditBox = nil
+    end)
+    self.renamePopup:Show()
 end
 
 ACT:RegisterModule(SplitHelper)
