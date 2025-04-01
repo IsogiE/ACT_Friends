@@ -450,20 +450,20 @@ local function UpdateDefaultFrames()
     
     local function HookFrameName(frame)
         if hookedFrames[frame] or not frame.name then return end
-        
+    
         frame.name.OriginalSetText = frame.name.SetText
-        frame.name.OriginalGetText = frame.name.GetText
-        
-        frame.name.SetText = function(self, text)
-            if text and ACT and ACT.db.profile.useNicknameIntegration then
-                local nickname = NicknameAPI:GetNicknameByCharacter(text)
-                if nickname then
-                    text = nickname
-                end
+    
+        hooksecurefunc(frame.name, "SetText", function(self, text)
+            if not ACT or not ACT.db.profile.useNicknameIntegration then return end
+
+            local baseName = text and text:match("^([^-]+)") or ""
+            local nickname = NicknameAPI:GetNicknameByCharacter(baseName)
+
+            if nickname then
+                self:OriginalSetText(nickname)
             end
-            self:OriginalSetText(text)
-        end
-        
+        end)
+    
         hookedFrames[frame] = true
     end
 
@@ -514,7 +514,7 @@ local function UpdateDefaultFrames()
                 end
             end
         else
-            C_Timer.After(0.5, UpdateAllFrames) 
+            C_Timer.After(0.5, UpdateAllFrames)
         end
     end)
 
