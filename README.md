@@ -121,6 +121,10 @@ Format:
 Group1: Char1, Char2, Char3, Char4, Char5; Group2: Char6, Char7 ... 
 ```
 
+- `:` starts a group definition and lists the characters it applies to.
+- `;` starts a new group block.
+- The last character entry **does not** require a trailing `;`.
+
 **Notes:**
 - Realm Names are required to be added to characters not on your realm as without that Blizzard will not recknogize them and not move them in your raid frames (only relevant for importing, the Raid Groups UI will do this for you).
 - You can add up to 5 characters in each group, with support for up to 8 groups.
