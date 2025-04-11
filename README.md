@@ -51,6 +51,11 @@ Adds nickname support to:
 
 ---
 
+### 🧱 Raid Groups
+For easy configuration of your Raid's groups. Simply drag people in, and out of your raid, or just swap their positions in the groups. No longer do you need to drag people in and out of groups to configure your raid frames to look nice. You'll also be able to save or import any preset you'd like for future reference. Sometimes healers just like their frames to look the same every week!
+
+---
+
 ### 🖱️ Macros
 A collection of commonly used **raid macros**.  
 Clicking an icon generates a macro for that specific **world marker** or **icon**.
@@ -107,6 +112,21 @@ Nickname: Char1, Char2; Nickname: Char3, Char4, Char5
 - **Officer defaults take precedence** over user-added nicknames, preventing raiders from disrupting assignments.
 
 ---
+
+### 🏚️ Raid Groups
+
+Format:
+
+```
+Group1: Char1, Char2, Char3, Char4, Char5; Group2: Char6, Char7 ... 
+```
+
+**Notes:**
+- Realm Names are required to be added to characters not on your realm as without that Blizzard will not recknogize them and not move them in your raid frames (only relevant for importing, the Raid Groups UI will do this for you).
+- You can add up to 5 characters in each group, with support for up to 8 groups.
+- Importing groups are required in order. E.g. you can not import a string with Group 2 only, as it requires Group 1 first. There's helpful error messages that'll guide you when an import is going wrong.
+
+--- 
 
 ### ✂️ Split Helper
 
