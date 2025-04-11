@@ -10,9 +10,8 @@ local CMP_PREFIX = "ACTF_NCMP"
 
 ACT.db = ACT.db or {}
 ACT.db.profile = ACT.db.profile or {}
-ACT.db.profile.nicknames = ACT.db.profile.nicknames or {}   
-ACT.db.profile.defaultNicknames = ACT.db.profile.defaultNicknames or "" 
-ACT.db.profile.defaultNicknameVersion = ACT.db.profile.defaultNicknameVersion or 0
+ACT.db.profile.nicknames = ACT.db.profile.nicknames or {}
+ACT.db.profile.defaultNicknames = ACT.db.profile.defaultNicknames or ""
 
 local function strtrim(s)
     return s and s:match("^%s*(.-)%s*$") or ""
@@ -57,7 +56,7 @@ AceComm:RegisterComm(PUSH_PREFIX, function(prefix, message, distribution, sender
         local decoded = LibDeflate:DecodeForPrint(message)
         local decompressed = LibDeflate:DecompressDeflate(decoded)
         if decompressed then
-            NicknameModule:MergePushUpdate(decompressed)
+            NicknameModule:ProcessDefaultImportString(decompressed)
             ACT.db.profile.defaultNicknames = decompressed
             NicknameModule:CleanupEmptyNicknames()
             NicknameModule:RefreshContent()
@@ -70,7 +69,6 @@ AceComm:RegisterComm(KILL_PREFIX, function(prefix, message, distribution, sender
     if prefix == KILL_PREFIX then
         ACT.db.profile.nicknames = {}
         ACT.db.profile.defaultNicknames = ""
-        ACT.db.profile.defaultNicknameVersion = 0
         NicknameModule:RefreshContent()
         if not NicknameModule.killswitchPopup then
             NicknameModule.killswitchPopup = UI:CreateTextPopup(
@@ -100,13 +98,12 @@ AceComm:RegisterComm(CMP_PREFIX, function(prefix, message, distribution, sender)
             AceComm:SendCommMessage(CMP_PREFIX, encoded, distribution)
         end
     else
-        if NicknameModule.compareActive then
-            local decoded = LibDeflate:DecodeForPrint(message)
-            local decompressed = LibDeflate:DecompressDeflate(decoded)
-            if decompressed then
-                local simpleName = sender:match("^(.-)-") or sender
-                NicknameModule.compareResponses[simpleName] = decompressed
-            end
+        local decoded = LibDeflate:DecodeForPrint(message)
+        local decompressed = LibDeflate:DecompressDeflate(decoded)
+        if decompressed then
+            local simpleName = sender:match("^(.-)-") or sender
+            NicknameModule.compareResponses = NicknameModule.compareResponses or {}
+            NicknameModule.compareResponses[simpleName] = decompressed
         end
     end
 end)
@@ -214,6 +211,23 @@ function NicknameModule:GetConfigSize()
     return 800, 600
 end
 
+function NormalizeString(str)
+    if not str or str == "" then return str end
+    local pos = 1
+    local byteVal = str:byte(pos)
+    local charLen = 1
+    if byteVal >= 0xF0 then  
+        charLen = 4
+    elseif byteVal >= 0xE0 then  
+        charLen = 3
+    elseif byteVal >= 0xC0 then  
+        charLen = 2
+    end
+    local firstChar = str:sub(1, charLen)
+    local rest = str:sub(charLen + 1)
+    return string.upper(firstChar) .. string.lower(rest)
+end
+
 function NicknameModule:CreateConfigPanel(parent)
     if self.configPanel then
         self.configPanel:SetParent(parent)
@@ -245,13 +259,12 @@ function NicknameModule:CreateConfigPanel(parent)
                 if entry ~= "" then
                     local nick, chars = strsplit(":", entry)
                     if nick and chars then
-                        local normNick = nick:sub(1,1):upper() .. nick:sub(2):lower()
+                        local normNick = NormalizeString(nick)
                         local normChars = {}
                         for c in string.gmatch(chars, "[^,]+") do
                             c = strtrim(c)
                             if c ~= "" then
-                                local normChar = c:sub(1,1):upper() .. c:sub(2):lower()
-                                table.insert(normChars, normChar)
+                                table.insert(normChars, NormalizeString(c))
                             end
                         end
                         table.insert(normalizedParts, normNick .. ": " .. table.concat(normChars, ", "))
@@ -354,7 +367,7 @@ function NicknameModule:CreateConfigPanel(parent)
         officerFrame.border = CreateFrame("Frame", nil, officerFrame, "BackdropTemplate")
         officerFrame.border:SetAllPoints()
         officerFrame.border:SetBackdrop({
-            edgeFile = "Interface\\AddOns\\ACT_Friends\\media\\border",
+            edgeFile = "Interface\\AddOns\\ACT\\media\\border",
             edgeSize = 8,
         })
         
@@ -372,9 +385,7 @@ function NicknameModule:CreateConfigPanel(parent)
         end
         
         CreateOfficerButton("Set Default", function() SlashCmdList["SETDEFAULTNICK"]("") end)
-        CreateOfficerButton("Compare Defaults", function() 
-            NicknameModule:CompareDefaultNicknames() 
-        end)
+        CreateOfficerButton("Compare Defaults", function() NicknameModule:CompareDefaultNicknames() end)
         CreateOfficerButton("Push Default", function() NicknameModule:ConfirmPushDefault() end)
         CreateOfficerButton("Nuke Local Nicknames", function() SlashCmdList["WIPENICKNAMES"]("") end)
         CreateOfficerButton("Nuke ALL Nicknames", function() SlashCmdList["ACTKILLSWITCH"]("") end)
@@ -429,50 +440,45 @@ function NicknameModule:CheckImportConflicts(importString)
     return nil
 end
 
-local function NormalizeString(str)
-  if not str or str == "" then return str end
-  return str:sub(1, 1):upper() .. str:sub(2):lower()
-end
-
 function NicknameModule:NormalizeStoredNames()
-  if ACT.db.profile.defaultNicknames and ACT.db.profile.defaultNicknames ~= "" then
-    local parts = {}
-    for entry in string.gmatch(ACT.db.profile.defaultNicknames, "[^;]+") do
-      entry = strtrim(entry)
-      if entry ~= "" then
-        local nick, chars = strsplit(":", entry)
-        if nick and chars then
-          local normNick = NormalizeString(strtrim(nick))
-          local normChars = {}
-          for c in string.gmatch(chars, "[^,]+") do
-            c = NormalizeString(strtrim(c))
-            table.insert(normChars, c)
-          end
-          table.insert(parts, normNick .. ": " .. table.concat(normChars, ", "))
+    if ACT.db.profile.defaultNicknames and ACT.db.profile.defaultNicknames ~= "" then
+        local parts = {}
+        for entry in string.gmatch(ACT.db.profile.defaultNicknames, "[^;]+") do
+            entry = strtrim(entry)
+            if entry ~= "" then
+                local nick, chars = strsplit(":", entry)
+                if nick and chars then
+                    local normNick = NormalizeString(strtrim(nick))
+                    local normChars = {}
+                    for c in string.gmatch(chars, "[^,]+") do
+                        c = NormalizeString(strtrim(c))
+                        table.insert(normChars, c)
+                    end
+                    table.insert(parts, normNick .. ": " .. table.concat(normChars, ", "))
+                end
+            end
         end
-      end
+        ACT.db.profile.defaultNicknames = table.concat(parts, "; ")
     end
-    ACT.db.profile.defaultNicknames = table.concat(parts, "; ")
-  end
 
-  local newMap = {}
-  for nickname, data in pairs(ACT.db.profile.nicknames) do
-    local normNick = NormalizeString(nickname)
-    local newChars = {}
-    if data.characters then
-      for _, charData in ipairs(data.characters) do
-        local charName = nil
-        if type(charData) == "table" then
-          charName = NormalizeString(charData.character)
-        else
-          charName = NormalizeString(charData)
+    local newMap = {}
+    for nickname, data in pairs(ACT.db.profile.nicknames) do
+        local normNick = NormalizeString(nickname)
+        local newChars = {}
+        if data.characters then
+            for _, charData in ipairs(data.characters) do
+                local charName = nil
+                if type(charData) == "table" then
+                    charName = NormalizeString(charData.character)
+                else
+                    charName = NormalizeString(charData)
+                end
+                table.insert(newChars, { character = charName })
+            end
         end
-        table.insert(newChars, { character = charName })
-      end
+        newMap[normNick] = { characters = newChars }
     end
-    newMap[normNick] = { characters = newChars }
-  end
-  ACT.db.profile.nicknames = newMap
+    ACT.db.profile.nicknames = newMap
 end
 
 function NicknameModule:RefreshContent()
@@ -542,7 +548,6 @@ function NicknameModule:RefreshContent()
                 NicknameModule.characterInputPopup = nil
                 NicknameModule.characterInputEditBox = nil
             end
-        
             local title = "Add New Character"
             local defaultText = ""
             NicknameModule.characterInputPopup, NicknameModule.characterInputEditBox = UI:CreatePopupWithEditBox(
@@ -585,13 +590,11 @@ function NicknameModule:RefreshContent()
                     C_Timer.After(3, function() self.importErrorMsg:SetText("") end)
                     return
                 end
-        
                 if NicknameModule.characterInputPopup then
                     NicknameModule.characterInputPopup:Hide()
                     NicknameModule.characterInputPopup = nil
                     NicknameModule.characterInputEditBox = nil
                 end
-        
                 local title = "Edit Character"
                 local defaultText = dropdown.selectedValue
                 NicknameModule.characterInputPopup, NicknameModule.characterInputEditBox = UI:CreatePopupWithEditBox(
@@ -1018,7 +1021,7 @@ function NicknameModule:CompareDefaultNicknames()
         return
     end
 
-    self.compareResponses = {}
+    self.compareResponses = self.compareResponses or {}
     self.compareActive = true
 
     local officerDefault = ACT.db.profile.defaultNicknames or ""
@@ -1096,9 +1099,6 @@ SlashCmdList["SETDEFAULTNICK"] = function(msg)
     if not IsPrivilegedUser() then
         return
     end
-    if not ACT.db.profile.defaultNicknameVersion then
-        ACT.db.profile.defaultNicknameVersion = 0
-    end
     if not NicknameModule.setDefaultPopup then
         NicknameModule.setDefaultPopup, _ = UI:CreatePopupWithEditBox(
             "Set New Default Nicknames",
@@ -1113,13 +1113,12 @@ SlashCmdList["SETDEFAULTNICK"] = function(msg)
                         if entry ~= "" then
                             local nick, chars = strsplit(":", entry)
                             if nick and chars then
-                                local normNick = nick:sub(1,1):upper() .. nick:sub(2):lower()
+                                local normNick = NormalizeString(nick)
                                 local normChars = {}
                                 for c in string.gmatch(chars, "[^,]+") do
                                     c = strtrim(c)
                                     if c ~= "" then
-                                        local normChar = c:sub(1,1):upper() .. c:sub(2):lower()
-                                        table.insert(normChars, normChar)
+                                        table.insert(normChars, NormalizeString(c))
                                     end
                                 end
                                 table.insert(normalizedParts, normNick .. ": " .. table.concat(normChars, ", "))
@@ -1128,7 +1127,6 @@ SlashCmdList["SETDEFAULTNICK"] = function(msg)
                     end
                     text = table.concat(normalizedParts, "; ")
                     ACT.db.profile.defaultNicknames = text
-                    ACT.db.profile.defaultNicknameVersion = ACT.db.profile.defaultNicknameVersion + 1
                     NicknameModule:ProcessDefaultImportString(text)
                     NicknameModule:CleanupEmptyNicknames()
                     NicknameModule:RefreshContent()
@@ -1166,7 +1164,6 @@ SlashCmdList["WIPENICKNAMES"] = function(msg)
             function()
                 ACT.db.profile.nicknames = {}
                 ACT.db.profile.defaultNicknames = ""
-                ACT.db.profile.defaultNicknameVersion = 0
                 NicknameModule:RefreshContent()
                 NicknameModule:PromptReloadNormal()
             end,
