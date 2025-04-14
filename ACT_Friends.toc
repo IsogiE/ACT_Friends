@@ -3,7 +3,7 @@
 ## Author: Isogi, Jaf
 ## Notes: Advance Custom Tools (Friends)
 ## SavedVariables: ACTDB, VACT
-## Version: 1.6
+## Version: 1.7
 ## IconTexture: Interface\AddOns\ACT_Friends\media\MiniMap.tga
 ## OptionalDeps: ElvUI, WeakAuras, Cell, Grid2, MRT
 ## Category: Advance Friends
@@ -15,11 +15,16 @@ Libs\AceEvent-3.0\AceEvent-3.0.xml
 Libs\AceAddon-3.0\AceAddon-3.0.xml
 libs\AceConsole-3.0\AceConsole-3.0.xml
 API.lua
+
+Assignments\Assignment.lua
+Assignments\Bosses\Bosses.xml
+
 UI.lua
 Core.lua
 Home.lua
 Nickname.lua
 RaidGroups.lua
+RaidAssignments.lua
 Macros.lua
 SplitHelper.lua
 AddonChecker.lua
