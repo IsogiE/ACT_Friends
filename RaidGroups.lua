@@ -654,8 +654,16 @@ function RaidGroups:CreateConfigPanel(parent)
     local importPresetButton = UI:CreateButton(configPanel, "Import Preset", 100, 30)
     importPresetButton:SetPoint("LEFT", savePresetButton, "RIGHT", 20, 0)
     importPresetButton:SetScript("OnClick", function()
-        local popup, editBox = UI:CreatePopupWithEditBox("Import Preset", 320, 150, "", nil, function() end)
+        if RaidGroups.importPopup and RaidGroups.importPopup:IsShown() then
+            return
+        end
+    
+        local popup, editBox = UI:CreatePopupWithEditBox("Import Preset", 320, 150, "", nil, function() 
+             RaidGroups.importPopup = nil 
+        end)
         popup:Show()
+        popup.editBox = editBox
+        RaidGroups.importPopup = popup
     
         local editFrame = editBox:GetParent()
         
@@ -713,9 +721,10 @@ function RaidGroups:CreateConfigPanel(parent)
                  VACT.RaidGroupsPresets = RaidGroups.Presets
                  RaidGroups:UpdatePresetsDropdown()
                  popup:Hide()
+                 RaidGroups.importPopup = nil
              end
         end)
-    end)
+    end)    
 
     local presetsDropdown = UI:CreateDropdown(part3Frame, 200, 30)
     presetsDropdown:SetPoint("LEFT", importPresetButton, "RIGHT", 20, 0)
@@ -728,12 +737,20 @@ function RaidGroups:CreateConfigPanel(parent)
     local renamePresetButton = UI:CreateButton(part3Frame, "Rename Preset", 100, 30)
     renamePresetButton:SetPoint("LEFT", presetsDropdown, "RIGHT", 20, 0)
     renamePresetButton:SetScript("OnClick", function()
-        if not RaidGroups.selectedPresetIndex then return end
+        if RaidGroups.renamePopup and RaidGroups.renamePopup:IsShown() then
+            return
+        end
+    
+        if not RaidGroups.selectedPresetIndex then 
+            return 
+        end
+    
         local currentPreset = RaidGroups.Presets[RaidGroups.selectedPresetIndex]
         if not currentPreset then
             return
         end
-        local popup, editBox = UI:CreatePopupWithEditBox("Rename Preset", 320, 150, currentPreset.name or "",
+    
+        RaidGroups.renamePopup = UI:CreatePopupWithEditBox("Rename Preset", 320, 150, currentPreset.name or "",
             function(newName)
                 if newName and newName:trim() ~= "" then
                     currentPreset.name = newName
@@ -741,10 +758,13 @@ function RaidGroups:CreateConfigPanel(parent)
                     RaidGroups:UpdatePresetsDropdown()
                     RaidGroups.presetsDropdown.button.text:SetText(newName)
                 end
+                RaidGroups.renamePopup = nil
             end,
-            function() end)
-        popup:Show()
-    end)
+            function()
+                RaidGroups.renamePopup = nil
+            end)
+        RaidGroups.renamePopup:Show()
+    end)    
     
     local deletePresetButton = UI:CreateButton(part3Frame, "Delete Preset", 100, 30)
     deletePresetButton:SetPoint("LEFT", renamePresetButton, "RIGHT", 20, 0)
