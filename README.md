@@ -12,7 +12,7 @@ This addon is designed for use within your guild. It’s **strongly advised** th
 After installing the addon:
 
 1. Open Nickname.lua
-2. Locate the function IsPrivilegedUser() (around **line 76**)
+2. Locate the function IsPrivilegedUser() (around **line 124**)
 3. Manually input the **BattleTags** of your officers or raid leader
 
 > ⚠️ **Note**: You’ll need to repeat this step **every time** you update the addon through WoWUp.
