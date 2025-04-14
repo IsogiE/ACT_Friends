@@ -1,0 +1,8 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+<Script file="Bandit.lua"/>
+<Script file="Cauldron.lua"/>
+<Script file="Rik.lua"/>
+<Script file="Sprocket.lua"/>
+<Script file="Mugzee.lua"/>
+<Script file="Gallywix.lua"/>
+</Ui>
