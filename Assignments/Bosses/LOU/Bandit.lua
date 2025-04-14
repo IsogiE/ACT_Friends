@@ -73,6 +73,9 @@ AssignmentBossUI["onearmedbandit"] = function(parentFrame, rosterList)
             editBox:SetFontObject("GameFontHighlightSmall")
             editBox:SetText("")
             editBox.usedName = nil
+            editBox:SetScript("OnEscapePressed", function(self)
+                self:ClearFocus()
+            end)
             dispelSlots[index] = editBox
         end
     end

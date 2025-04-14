@@ -37,6 +37,9 @@ AssignmentBossUI["gallywix"] = function(parentFrame, rosterList)
             editBox:SetAutoFocus(false)
             editBox:SetFontObject("GameFontHighlightSmall")
             editBox:SetText("")
+            editBox:SetScript("OnEscapePressed", function(self)
+                self:ClearFocus()
+            end)
             editBox.usedName = nil
             
             table.insert(group1, editBox)
@@ -76,6 +79,9 @@ AssignmentBossUI["gallywix"] = function(parentFrame, rosterList)
             editBox:SetAutoFocus(false)
             editBox:SetFontObject("GameFontHighlightSmall")
             editBox:SetText("")
+            editBox:SetScript("OnEscapePressed", function(self)
+                self:ClearFocus()
+            end)
             editBox.usedName = nil
             
             table.insert(group2, editBox)

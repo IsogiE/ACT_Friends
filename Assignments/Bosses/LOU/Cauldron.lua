@@ -27,6 +27,9 @@ AssignmentBossUI["cauldron"] = function(parentFrame, rosterList)
         editBox:SetAutoFocus(false)
         editBox:SetFontObject("GameFontHighlightSmall")
         editBox:SetText("")
+        editBox:SetScript("OnEscapePressed", function(self)
+            self:ClearFocus()
+        end)
         editBox.usedName = nil
         leftSlots[i] = editBox
     end
@@ -49,6 +52,9 @@ AssignmentBossUI["cauldron"] = function(parentFrame, rosterList)
         editBox:SetAutoFocus(false)
         editBox:SetFontObject("GameFontHighlightSmall")
         editBox:SetText("")
+        editBox:SetScript("OnEscapePressed", function(self)
+            self:ClearFocus()
+        end)
         editBox.usedName = nil
         rightSlots[j] = editBox
     end

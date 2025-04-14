@@ -45,6 +45,9 @@ AssignmentBossUI["rikreverb"] = function(parentFrame, rosterList)
             editBox:SetAutoFocus(false)
             editBox:SetFontObject("GameFontHighlightSmall")
             editBox:SetText("")
+            editBox:SetScript("OnEscapePressed", function(self)
+                self:ClearFocus()
+            end)
             editBox.usedName = nil
             slots[j] = editBox
             prevSlotFrame = slot

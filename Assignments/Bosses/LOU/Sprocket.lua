@@ -41,6 +41,9 @@ AssignmentBossUI["sprocketmonger"] = function(parentFrame, rosterList)
             editBox:SetAutoFocus(false)
             editBox:SetFontObject("GameFontHighlightSmall")
             editBox:SetText("")
+            editBox:SetScript("OnEscapePressed", function(self)
+                self:ClearFocus()
+            end)
             editBox.usedName = nil
             
             table.insert(topGroup, editBox)
@@ -86,6 +89,9 @@ AssignmentBossUI["sprocketmonger"] = function(parentFrame, rosterList)
             editBox:SetAutoFocus(false)
             editBox:SetFontObject("GameFontHighlightSmall")
             editBox:SetText("")
+            editBox:SetScript("OnEscapePressed", function(self)
+                self:ClearFocus()
+            end)
             editBox.usedName = nil
             
             table.insert(rowGroup, editBox)
@@ -112,6 +118,9 @@ AssignmentBossUI["sprocketmonger"] = function(parentFrame, rosterList)
             editBox:SetAutoFocus(false)
             editBox:SetFontObject("GameFontHighlightSmall")
             editBox:SetText("")
+            editBox:SetScript("OnEscapePressed", function(self)
+                self:ClearFocus()
+            end)
             editBox.usedName = nil
             
             table.insert(rowGroup, editBox)
