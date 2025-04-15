@@ -131,7 +131,7 @@ Group1: Char1, Char2, Char3, Char4, Char5; Group2: Char6, Char7 ...
 - The last character entry **does not** require a trailing `;`.
 
 **Notes:**
-- Realm Names are required to be added to characters not on your realm as without that Blizzard will not recknogize them and not move them in your raid frames (only relevant for importing, the Raid Groups UI will do this for you).
+- Realm Names are required to be added to characters not on your realm as without that Blizzard will not recognize them and not move them in your raid frames (only relevant for importing, the Raid Groups UI will do this for you).
 - You can add up to 5 characters in each group, with support for up to 8 groups.
 - Importing groups are required in order. E.g. you can not import a string with Group 2 only, as it requires Group 1 first. There's helpful error messages that'll guide you when an import is going wrong.
 
