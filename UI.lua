@@ -51,6 +51,9 @@ function UI:CreateReadOnlyBox(parent, width, height, defaultText)
     editBox:SetWidth(width - 10)
     editBox:SetTextInsets(5, 5, 5, 5)
     editBox:SetText(defaultText or "")
+    editBox:SetScript("OnEscapePressed", function(self)
+        self:ClearFocus()
+    end)
     scroll:SetScrollChild(editBox)
 
     editBox.storedText = defaultText or ""
