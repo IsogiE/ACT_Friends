@@ -114,6 +114,13 @@ AssignmentBossUI["onearmedbandit"] = function(parentFrame, rosterList)
         UI:SetDropdownOptions(presetDropdown, options)
     end
 
+    local function capFirst(str)
+        if str and str ~= "" then
+            return str:sub(1, 1):upper() .. str:sub(2)
+        end
+        return str
+    end
+
     local noteButton = UI:CreateButton(parentFrame, "Generate Note", 120, 25, function()
         if isGenerateNotePopupOpen then return end
         isGenerateNotePopupOpen = true
@@ -127,7 +134,15 @@ AssignmentBossUI["onearmedbandit"] = function(parentFrame, rosterList)
         local dispelNames = {}
         for _, slot in ipairs(dispelSlots) do
             if slot.usedName and slot.usedName ~= "" then
-                table.insert(dispelNames, slot.usedName)
+                local name = slot.usedName
+                if LiquidAPI and LiquidAPI.GetName then
+                    local nick = LiquidAPI:GetName(name)
+                    if nick and nick ~= "" then
+                        name = nick
+                    end
+                end
+                name = capFirst(name)
+                table.insert(dispelNames, name)
             end
         end
         local note = "liquidStart\n" .. table.concat(sequence, " ") .. "\nliquidEnd\n\nliquidStart2\n" .. table.concat(dispelNames, " ") .. "\nliquidEnd2"

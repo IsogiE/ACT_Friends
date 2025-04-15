@@ -114,6 +114,18 @@ function RaidMarksModule:OnUpdate(elapsed)
         return
     end
     self.tmr = 0 
+
+    local function resolveUnit(nameText)
+        if UnitName(nameText) then
+            return nameText
+        end
+        local resolved, _, _ = LiquidAPI:GetCharacterInGroup(nameText)
+        if resolved and UnitName(resolved) then
+            return resolved
+        end
+        return nil
+    end    
+
     for i = 1, 8 do
         local row = self.rows[i]
         if row and row.editBox then
@@ -121,16 +133,16 @@ function RaidMarksModule:OnUpdate(elapsed)
             if text and text ~= "" then
                 if text:find("[, ]") then
                     for name in text:gmatch("([^,%s]+)") do
-                        if UnitName(name) then
-                            if GetRaidTargetIndex(name) ~= i then
-                                SetRaidTargetIcon(name, i)
-                            end
+                        local unit = resolveUnit(name)
+                        if unit and GetRaidTargetIndex(unit) ~= i then
+                            SetRaidTargetIcon(unit, i)
                             break
                         end
                     end
-                elseif UnitName(text) then
-                    if GetRaidTargetIndex(text) ~= i then
-                        SetRaidTargetIcon(text, i)
+                else
+                    local unit = resolveUnit(text)
+                    if unit and GetRaidTargetIndex(unit) ~= i then
+                        SetRaidTargetIcon(unit, i)
                     end
                 end
             end

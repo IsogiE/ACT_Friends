@@ -395,63 +395,103 @@ AssignmentBossUI["mugzee"] = function(parentFrame, rosterList)
         UI:SetDropdownOptions(presetDropdown, options)
     end
 
+    local function capFirst(str)
+        if str and str ~= "" then
+            return str:sub(1,1):upper() .. str:sub(2)
+        end
+        return str
+    end
+
     local noteButton = UI:CreateButton(parentFrame, "Generate Note", 120, 25, function()
         if isGenerateNotePopupOpen then return end
         isGenerateNotePopupOpen = true
         local note = ""
+        
         note = note .. "liquidStart\n"
         local currentGroup = nil
         for i, row in ipairs(mugzeeGaolRows) do
             if not currentGroup then
                 currentGroup = row.group
             elseif row.group ~= currentGroup then
-                note = note .. "\n" 
+                note = note .. "\n"
                 currentGroup = row.group
             end
             local names = {}
             for _, editBox in ipairs(row.editBoxes) do
                 if editBox.usedName and editBox.usedName ~= "" then
-                    table.insert(names, editBox.usedName)
+                    local name = editBox.usedName
+                    if LiquidAPI and LiquidAPI.GetName then
+                        local nick = LiquidAPI:GetName(name)
+                        if nick and nick ~= "" then
+                            name = nick
+                        end
+                    end
+                    name = capFirst(name)
+                    table.insert(names, name)
                 end
             end
             note = note .. table.concat(names, " ") .. "\n"
         end
         note = note .. "liquidEnd\n\n"
-
+    
         note = note .. "liquidStart3\n"
         for i, row in ipairs(mugzeeGripRows) do
             local names = {}
             for _, editBox in ipairs(row) do
                 if editBox.usedName and editBox.usedName ~= "" then
-                    table.insert(names, editBox.usedName)
+                    local name = editBox.usedName
+                    if LiquidAPI and LiquidAPI.GetName then
+                        local nick = LiquidAPI:GetName(name)
+                        if nick and nick ~= "" then
+                            name = nick
+                        end
+                    end
+                    name = capFirst(name)
+                    table.insert(names, name)
                 end
             end
             note = note .. table.concat(names, " ") .. "\n"
         end
         note = note .. "liquidEnd3\n\n"
-
+    
         note = note .. "liquidStart2\n"
         for groupIndex, group in ipairs(mugzeeGoblinGroups) do
             local names = {}
             for _, editBox in ipairs(group) do
                 if editBox.usedName and editBox.usedName ~= "" then
-                    table.insert(names, editBox.usedName)
+                    local name = editBox.usedName
+                    if LiquidAPI and LiquidAPI.GetName then
+                        local nick = LiquidAPI:GetName(name)
+                        if nick and nick ~= "" then
+                            name = nick
+                        end
+                    end
+                    name = capFirst(name)
+                    table.insert(names, name)
                 end
             end
             note = note .. table.concat(names, " ") .. "\n"
         end
         note = note .. "liquidEnd2\n\n"
-        
+    
         note = note .. "liquidStart4\n"
         local names = {}
         for _, editBox in ipairs(mugzeeFrostRows) do
             if editBox.usedName and editBox.usedName ~= "" then
-                table.insert(names, editBox.usedName)
+                local name = editBox.usedName
+                if LiquidAPI and LiquidAPI.GetName then
+                    local nick = LiquidAPI:GetName(name)
+                    if nick and nick ~= "" then
+                        name = nick
+                    end
+                end
+                name = capFirst(name)
+                table.insert(names, name)
             end
         end
         note = note .. table.concat(names, " ") .. "\n"
         note = note .. "liquidEnd4"
-        
+    
         local popup, editBox = UI:CreatePopupWithEditBox("Assignment Note - Mugzee", 400, 300, note, function(text)
             isGenerateNotePopupOpen = false
         end, function()

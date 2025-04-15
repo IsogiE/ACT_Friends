@@ -195,6 +195,13 @@ AssignmentBossUI["sprocketmonger"] = function(parentFrame, rosterList)
         UI:SetDropdownOptions(presetDropdown, options)
     end
 
+    local function capFirst(str)
+        if str and str ~= "" then
+            return str:sub(1,1):upper() .. str:sub(2)
+        end
+        return str
+    end
+    
     local noteButton = UI:CreateButton(parentFrame, "Generate Note", 120, 25, function()
         if isGenerateNotePopupOpen then return end
         isGenerateNotePopupOpen = true
@@ -202,15 +209,32 @@ AssignmentBossUI["sprocketmonger"] = function(parentFrame, rosterList)
         local topNames = {}
         for _, editBox in ipairs(topGroup) do
             if editBox.usedName then
-                table.insert(topNames, editBox.usedName)
+                local name = editBox.usedName
+                if LiquidAPI and LiquidAPI.GetName then
+                    local nick = LiquidAPI:GetName(name)
+                    if nick and nick ~= "" then
+                        name = nick
+                    end
+                end
+                name = capFirst(name)
+                table.insert(topNames, name)
             end
         end
         note = note .. table.concat(topNames, " ") .. "\n\n"
+        
         for idx, group in ipairs(rowGroups) do
             local names = {}
             for _, editBox in ipairs(group) do
                 if editBox.usedName then
-                    table.insert(names, editBox.usedName)
+                    local name = editBox.usedName
+                    if LiquidAPI and LiquidAPI.GetName then
+                        local nick = LiquidAPI:GetName(name)
+                        if nick and nick ~= "" then
+                            name = nick
+                        end
+                    end
+                    name = capFirst(name)
+                    table.insert(names, name)
                 end
             end
             if #names > 0 then
@@ -227,7 +251,7 @@ AssignmentBossUI["sprocketmonger"] = function(parentFrame, rosterList)
         popup:Show()
         editBox:ClearFocus()
         editBox:HighlightText()
-    end)
+    end)    
     noteButton:SetPoint("BOTTOMRIGHT", parentFrame, "BOTTOMRIGHT", -155, 35)
 
     local spacing = 10

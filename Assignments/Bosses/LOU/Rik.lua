@@ -95,6 +95,13 @@ AssignmentBossUI["rikreverb"] = function(parentFrame, rosterList)
         UI:SetDropdownOptions(presetDropdown, options)
     end
 
+    local function capFirst(str)
+        if str and str ~= "" then
+            return str:sub(1,1):upper() .. str:sub(2)
+        end
+        return str
+    end
+    
     local noteButton = UI:CreateButton(parentFrame, "Generate Note", 120, 25, function()
         if isGenerateNotePopupOpen then return end
         isGenerateNotePopupOpen = true
@@ -103,7 +110,15 @@ AssignmentBossUI["rikreverb"] = function(parentFrame, rosterList)
             local assigned = {}
             for _, slot in ipairs(slotsGroups[i]) do
                 if slot.usedName then
-                    table.insert(assigned, slot.usedName)
+                    local name = slot.usedName
+                    if LiquidAPI and LiquidAPI.GetName then
+                        local nick = LiquidAPI:GetName(name)
+                        if nick and nick ~= "" then
+                            name = nick
+                        end
+                    end
+                    name = capFirst(name)
+                    table.insert(assigned, name)
                 end
             end
             if #assigned > 0 then
@@ -120,7 +135,7 @@ AssignmentBossUI["rikreverb"] = function(parentFrame, rosterList)
         popup:Show()
         editBox:ClearFocus()
         editBox:HighlightText()
-    end)
+    end)    
     noteButton:SetPoint("BOTTOMRIGHT", parentFrame, "BOTTOMRIGHT", -155, 35)
 
     local spacing = 10

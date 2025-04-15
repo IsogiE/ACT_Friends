@@ -124,6 +124,13 @@ AssignmentBossUI["gallywix"] = function(parentFrame, rosterList)
         UI:SetDropdownOptions(presetDropdown, options)
     end
 
+    local function capFirst(str)
+        if str and str ~= "" then
+            return str:sub(1,1):upper() .. str:sub(2)
+        end
+        return str
+    end
+    
     local noteButton = UI:CreateButton(parentFrame, "Generate Note", 120, 25, function()
         if isGenerateNotePopupOpen then return end
         isGenerateNotePopupOpen = true
@@ -132,7 +139,15 @@ AssignmentBossUI["gallywix"] = function(parentFrame, rosterList)
             local assigned = {}
             for _, editBox in ipairs(group) do
                 if editBox.usedName then
-                    table.insert(assigned, editBox.usedName)
+                    local name = editBox.usedName
+                    if LiquidAPI and LiquidAPI.GetName then
+                        local nick = LiquidAPI:GetName(name)
+                        if nick and nick ~= "" then
+                            name = nick
+                        end
+                    end
+                    name = capFirst(name)
+                    table.insert(assigned, name)
                 end
             end
             note = note .. table.concat(assigned, " ") .. "\n"

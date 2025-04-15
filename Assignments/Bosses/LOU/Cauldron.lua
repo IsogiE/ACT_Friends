@@ -99,24 +99,53 @@ AssignmentBossUI["cauldron"] = function(parentFrame, rosterList)
         UI:SetDropdownOptions(presetDropdown, options)
     end
 
+    local function capFirst(str)
+        if str and str ~= "" then
+            return str:sub(1,1):upper() .. str:sub(2)
+        end
+        return str
+    end
+
     local noteButton = UI:CreateButton(parentFrame, "Generate Note", 120, 25, function()
         if isGenerateNotePopupOpen then return end
         isGenerateNotePopupOpen = true
         local note = "Boss Groups\n"
         local leftNames = {}
         for _, slot in ipairs(leftSlots) do
-            if slot.usedName then table.insert(leftNames, slot.usedName) end
+            if slot.usedName then 
+                local name = slot.usedName
+                if LiquidAPI and LiquidAPI.GetName then
+                    local nick = LiquidAPI:GetName(name)
+                    if nick and nick ~= "" then
+                        name = nick
+                    end
+                end
+                name = capFirst(name)
+                table.insert(leftNames, name)
+            end
         end
         if #leftNames > 0 then
             note = note .. "Left Flarendo " .. table.concat(leftNames, " ") .. "\n"
         end
+        
         local rightNames = {}
         for _, slot in ipairs(rightSlots) do
-            if slot.usedName then table.insert(rightNames, slot.usedName) end
+            if slot.usedName then 
+                local name = slot.usedName
+                if LiquidAPI and LiquidAPI.GetName then
+                    local nick = LiquidAPI:GetName(name)
+                    if nick and nick ~= "" then
+                        name = nick
+                    end
+                end
+                name = capFirst(name)
+                table.insert(rightNames, name)
+            end
         end
         if #rightNames > 0 then
             note = note .. "Right Torq " .. table.concat(rightNames, " ") .. "\n"
         end
+        
         local popup, editBox = UI:CreatePopupWithEditBox("Assignment Note - Cauldron", 400, 300, note, function(text)
             isGenerateNotePopupOpen = false
         end, function() 
@@ -125,7 +154,7 @@ AssignmentBossUI["cauldron"] = function(parentFrame, rosterList)
         popup:SetScript("OnHide", function() isGenerateNotePopupOpen = false end)
         popup:Show()
         editBox:ClearFocus()
-        editBox:HighlightText()
+        editBox:HighlightText()      
     end)
     noteButton:SetPoint("BOTTOMRIGHT", parentFrame, "BOTTOMRIGHT", -155, 35)
 
