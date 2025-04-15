@@ -12,7 +12,7 @@ This addon is designed for use within your guild. It’s **strongly advised** th
 After installing the addon:
 
 1. Open Nickname.lua
-2. Locate the function IsPrivilegedUser() (around **line 76**)
+2. Locate the function IsPrivilegedUser() (around **line 124**)
 3. Manually input the **BattleTags** of your officers or raid leader
 
 > ⚠️ **Note**: You’ll need to repeat this step **every time** you update the addon through WoWUp.
@@ -103,12 +103,13 @@ Displays:
 
 Format:
 
+```
 Nickname: Char1, Char2; Nickname: Char3, Char4, Char5
+```
 
-
-- : starts a nickname definition and lists the characters it applies to.
-- ; starts a new nickname block.
-- The last nickname entry **does not** require a trailing ;.
+- `:` starts a nickname definition and lists the characters it applies to.
+- `;` starts a new nickname block.
+- The last nickname entry **does not** require a trailing `;`.
 
 **Notes:**
 - Officers are encouraged to **push default nicknames** to raiders.
@@ -121,15 +122,16 @@ Nickname: Char1, Char2; Nickname: Char3, Char4, Char5
 
 Format:
 
-Group1: Char1, Char2, Char3, Char4, Char5; Group2: Char6, Char7 ...
+```
+Group1: Char1, Char2, Char3, Char4, Char5; Group2: Char6, Char7 ... 
+```
 
-
-- : starts a group definition and lists the characters it applies to.
-- ; starts a new group block.
-- The last character entry **does not** require a trailing ;.
+- `:` starts a group definition and lists the characters it applies to.
+- `;` starts a new group block.
+- The last character entry **does not** require a trailing `;`.
 
 **Notes:**
-- Realm Names are required to be added to characters not on your realm as without that Blizzard will not recknogize them and not move them in your raid frames (only relevant for importing, the Raid Groups UI will do this for you).
+- Realm Names are required to be added to characters not on your realm as without that Blizzard will not recognize them and not move them in your raid frames (only relevant for importing, the Raid Groups UI will do this for you).
 - You can add up to 5 characters in each group, with support for up to 8 groups.
 - Importing groups are required in order. E.g. you can not import a string with Group 2 only, as it requires Group 1 first. There's helpful error messages that'll guide you when an import is going wrong.
 
@@ -139,8 +141,9 @@ Group1: Char1, Char2, Char3, Char4, Char5; Group2: Char6, Char7 ...
 
 Format:
 
+```
 Char1, Char2, Char3, Char4, ...
-
+```
 
 - Maximum of **30 characters**.
 - Going over the limit will result in an error message and abort the import.
