@@ -154,7 +154,6 @@ AssignmentBossUI["onearmedbandit"] = function(parentFrame, rosterList)
         popup:SetScript("OnHide", function() isGenerateNotePopupOpen = false end)
         popup:Show()
         editBox:ClearFocus()
-        editBox:HighlightText()
     end)
     noteButton:SetPoint("BOTTOMRIGHT", parentFrame, "BOTTOMRIGHT", -155, 35)
 
@@ -253,6 +252,10 @@ AssignmentBossUI["onearmedbandit"] = function(parentFrame, rosterList)
     UpdatePresetDropdown()
 
     local savePresetButton = UI:CreateButton(parentFrame, "Save Preset", 100, 25, function()
+        if isRenamePopupOpen then 
+            return 
+        end
+    
         local hasData = false
         local data = {}
         if AssignmentModule.currentSlots then
@@ -260,22 +263,39 @@ AssignmentBossUI["onearmedbandit"] = function(parentFrame, rosterList)
                 data[i] = {}
                 for j, editBox in ipairs(group) do
                     local name = editBox.usedName or ""
-                    if name ~= "" then hasData = true end
+                    if name ~= "" then 
+                        hasData = true 
+                    end
                     data[i][j] = name
                 end
             end
         end
-        if not hasData then return end
+        if not hasData then 
+            return 
+        end
+    
         local dropdownData = {}
         for i, dd in ipairs(dropdowns) do
             dropdownData[i] = dd.button.text:GetText() or "None"
         end
-        local presetName = "Preset " .. date("%Y-%m-%d %H:%M:%S")
-        table.insert(VACT.BossPresets[bossID], { name = presetName, data = data, dropdowns = dropdownData })
-        UpdatePresetDropdown()
-        presetDropdown.button.text:SetText(presetName)
+    
+        isRenamePopupOpen = true
+        local popup, editBox = UI:CreatePopupWithEditBox("Save Preset", 320, 150, "",
+            function(newName)
+                if newName and newName:trim() ~= "" then
+                    local presetName = newName
+                    table.insert(VACT.BossPresets[bossID], { name = presetName, data = data, dropdowns = dropdownData })
+                    UpdatePresetDropdown()
+                    presetDropdown.button.text:SetText(presetName)
+                end
+                isRenamePopupOpen = false
+            end,
+            function()
+                isRenamePopupOpen = false
+            end)
+        popup:Show()
     end)
-    savePresetButton:SetPoint("RIGHT", presetDropdown, "LEFT", -spacing, 0)
+    savePresetButton:SetPoint("RIGHT", presetDropdown, "LEFT", -spacing, 0)    
 
     local clearUIButton = UI:CreateButton(parentFrame, "Clear UI", 100, 25, function()
         if AssignmentModule.currentSlots then

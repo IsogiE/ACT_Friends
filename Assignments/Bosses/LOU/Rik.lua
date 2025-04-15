@@ -134,7 +134,6 @@ AssignmentBossUI["rikreverb"] = function(parentFrame, rosterList)
         popup:SetScript("OnHide", function() isGenerateNotePopupOpen = false end)
         popup:Show()
         editBox:ClearFocus()
-        editBox:HighlightText()
     end)    
     noteButton:SetPoint("BOTTOMRIGHT", parentFrame, "BOTTOMRIGHT", -155, 35)
 
@@ -225,6 +224,10 @@ AssignmentBossUI["rikreverb"] = function(parentFrame, rosterList)
     UpdatePresetDropdown()
 
     local savePresetButton = UI:CreateButton(parentFrame, "Save Preset", 100, 25, function()
+        if isRenamePopupOpen then
+            return
+        end
+    
         local hasData = false
         local data = {}
         if AssignmentModule.currentSlots then
@@ -238,10 +241,22 @@ AssignmentBossUI["rikreverb"] = function(parentFrame, rosterList)
             end
         end
         if not hasData then return end
-        local presetName = "Preset " .. date("%Y-%m-%d %H:%M:%S")
-        table.insert(VACT.BossPresets[bossID], { name = presetName, data = data })
-        UpdatePresetDropdown()
-        presetDropdown.button.text:SetText(presetName)
+    
+        isRenamePopupOpen = true
+        local popup, editBox = UI:CreatePopupWithEditBox("Save Preset", 320, 150, "",
+            function(newName)
+                if newName and newName:trim() ~= "" then
+                    local presetName = newName
+                    table.insert(VACT.BossPresets[bossID], { name = presetName, data = data })
+                    UpdatePresetDropdown()
+                    presetDropdown.button.text:SetText(presetName)
+                end
+                isRenamePopupOpen = false
+            end,
+            function()
+                isRenamePopupOpen = false
+            end)
+        popup:Show()
     end)
     savePresetButton:SetPoint("RIGHT", presetDropdown, "LEFT", -spacing, 0)
 

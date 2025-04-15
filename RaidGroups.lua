@@ -46,6 +46,21 @@ local function GetPlayerClassColorByName(playerName)
     return { 1, 1, 1, 1 }
 end
 
+function RaidGroups:NormalizeCharacterName(name)
+    local trimmed = name:match("^%s*(.-)%s*$")
+    local dashPos = trimmed:find("-", 1, true)
+    if dashPos then
+        local basePart = trimmed:sub(1, dashPos - 1)
+        local realmPart = trimmed:sub(dashPos)
+        local lowerBase = string.lower(basePart)
+        local normalizedBase = lowerBase:gsub("^%l", string.upper)
+        return normalizedBase .. realmPart
+    else
+        local lower = string.lower(trimmed)
+        return lower:gsub("^%l", string.upper)
+    end
+end
+
 local DragContainer = CreateFrame("Frame", "RaidGroups_DragContainer", UIParent)
 DragContainer:SetAllPoints(UIParent)
 DragContainer:SetFrameStrata("HIGH")
@@ -66,7 +81,6 @@ local function ClearAllEditFocus()
         end
     end
 end
-_G.ClearAllEditFocus = ClearAllEditFocus
 
 local function CreateCustomEditBox(parent, width, height, defaultText)
     local container = CreateFrame("Frame", nil, parent, "BackdropTemplate")
@@ -626,6 +640,10 @@ function RaidGroups:CreateConfigPanel(parent)
     local savePresetButton = UI:CreateButton(configPanel, "Save Preset", 100, 30)
     savePresetButton:SetPoint("TOPLEFT", part3Frame, "TOPLEFT", 0, 0)
     savePresetButton:SetScript("OnClick", function()
+        if isRenamePopupOpen then
+            return
+        end
+    
         local hasData = false
         local presetParts = {}
         for group = 1, 8 do
@@ -642,14 +660,43 @@ function RaidGroups:CreateConfigPanel(parent)
         if not hasData then
             return
         end
+    
         local presetData = table.concat(presetParts, ";")
-        local presetName = "Preset " .. date("%Y-%m-%d %H:%M:%S")
-        table.insert(RaidGroups.Presets, { name = presetName, data = presetData })
-        VACT.RaidGroupsPresets = RaidGroups.Presets
-        RaidGroups:UpdatePresetsDropdown()
-        RaidGroups.selectedPresetIndex = #RaidGroups.Presets
-        RaidGroups.presetsDropdown.button.text:SetText(presetName)
+        
+        isRenamePopupOpen = true
+        local popup, editBox = UI:CreatePopupWithEditBox("Save Preset", 320, 150, "",
+            function(newName)
+                if newName and newName:trim() ~= "" then
+                    local presetName = newName
+                    table.insert(RaidGroups.Presets, { name = presetName, data = presetData })
+                    VACT.RaidGroupsPresets = RaidGroups.Presets
+                    RaidGroups:UpdatePresetsDropdown()
+                    RaidGroups.selectedPresetIndex = #RaidGroups.Presets
+                    RaidGroups.presetsDropdown.button.text:SetText(presetName)
+                end
+                isRenamePopupOpen = false
+            end,
+            function()
+                isRenamePopupOpen = false
+            end)
+        popup:Show()
     end)    
+
+    function RaidGroups:ImportPresetWithCustomName(normalizedText)
+        local function onNameEntered(customName)
+             customName = customName and customName:trim() or ""
+             if customName == "" then
+                 customName = "Imported Preset " .. (#self.Presets + 1)
+             end
+             table.insert(self.Presets, { name = customName, data = normalizedText })
+             VACT.RaidGroupsPresets = self.Presets
+             self:UpdatePresetsDropdown()
+             self.presetsDropdown.button.text:SetText(customName)
+             self.selectedPresetIndex = #self.Presets
+        end
+        local popup, editBox = UI:CreatePopupWithEditBox("Enter Preset Name", 320, 150, "", onNameEntered)
+        popup:Show()
+    end    
 
     local importPresetButton = UI:CreateButton(configPanel, "Import Preset", 100, 30)
     importPresetButton:SetPoint("LEFT", savePresetButton, "RIGHT", 20, 0)
@@ -658,7 +705,7 @@ function RaidGroups:CreateConfigPanel(parent)
             return
         end
     
-        local popup, editBox = UI:CreatePopupWithEditBox("Import Preset", 320, 150, "", nil, function() 
+        local popup, editBox = UI:CreatePopupWithEditBox("Import Preset", 320, 150, "", nil, function()
              RaidGroups.importPopup = nil 
         end)
         popup:Show()
@@ -680,6 +727,79 @@ function RaidGroups:CreateConfigPanel(parent)
     
         local originalHeight = popup:GetHeight()
     
+        local function NormalizeImportedPreset(text)
+            if type(text) ~= "string" then
+                return nil, "Preset text must be a string."
+            end
+    
+            local groups = {}
+            for groupPart in string.gmatch(text, "([^;]+)") do
+                table.insert(groups, groupPart)
+            end
+    
+            if #groups > 8 then
+                return nil, "Preset must contain at most 8 groups separated by ';'."
+            elseif #groups < 1 then
+                return nil, "Preset must contain at least 1 group."
+            end
+    
+            local normalizedGroups = {}
+            for i, groupStr in ipairs(groups) do
+                local groupNum, namesStr = string.match(groupStr, "^%s*Group(%d+):%s*(.*)%s*$")
+                if not groupNum then
+                    return nil, "Formatting error in group " .. i .. "."
+                end
+                groupNum = tonumber(groupNum)
+                if groupNum ~= i then
+                    return nil, "Expected Group " .. i .. " but found Group " .. groupNum .. "."
+                end
+    
+                local names = {}
+                for name in string.gmatch(namesStr, "([^,]+)") do
+                    local trimmed = name:match("^%s*(.-)%s*$")
+                    if trimmed ~= "" then
+                        local normalized = RaidGroups:NormalizeCharacterName(trimmed)
+                        table.insert(names, normalized)
+                    end
+                end
+                if #names > 5 then
+                    return nil, "Too many names in Group " .. i .. "."
+                end
+                while #names < 5 do
+                    table.insert(names, "")
+                end
+                normalizedGroups[i] = { group = i, names = names }
+            end
+    
+            for i = #groups + 1, 8 do
+                local names = {}
+                for j = 1, 5 do
+                    table.insert(names, "")
+                end
+                normalizedGroups[i] = { group = i, names = names }
+            end
+    
+            local seenNames = {}
+            for i, group in ipairs(normalizedGroups) do
+                for j, name in ipairs(group.names) do
+                    if name ~= "" then
+                        if seenNames[name] then
+                            return nil, "Error: Duplicate character '" .. name .. "' detected in preset."
+                        else
+                            seenNames[name] = true
+                        end
+                    end
+                end
+            end
+    
+            local presetParts = {}
+            for _, grp in ipairs(normalizedGroups) do
+                table.insert(presetParts, "Group" .. grp.group .. ": " .. table.concat(grp.names, ","))
+            end
+            local normalizedText = table.concat(presetParts, ";")
+            return normalizedText
+        end
+    
         acceptButton:SetScript("OnClick", function()
              local text = editBox:GetText()
              if not (text and text:trim() ~= "") then 
@@ -687,7 +807,7 @@ function RaidGroups:CreateConfigPanel(parent)
                  return 
              end
     
-             local normalizedText, err = RaidGroups:ValidateAndNormalizePresetString(text)
+             local normalizedText, err = NormalizeImportedPreset(text)
              if not normalizedText then
                  if not popup.errorMsg then
                      popup.errorMsg = popup:CreateFontString(nil, "OVERLAY", "GameFontRed")
@@ -714,12 +834,7 @@ function RaidGroups:CreateConfigPanel(parent)
                      popup.errorMsg:Hide()
                      popup:SetHeight(originalHeight)
                  end
-                 table.insert(RaidGroups.Presets, {
-                     name = "Imported Preset " .. (#RaidGroups.Presets + 1),
-                     data = normalizedText
-                 })
-                 VACT.RaidGroupsPresets = RaidGroups.Presets
-                 RaidGroups:UpdatePresetsDropdown()
+                 RaidGroups:ImportPresetWithCustomName(normalizedText)
                  popup:Hide()
                  RaidGroups.importPopup = nil
              end

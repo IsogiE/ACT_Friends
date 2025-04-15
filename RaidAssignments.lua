@@ -6,8 +6,20 @@ VACT.BossPresets = VACT.BossPresets or {}
 
 function AssignmentModule:GetDisplayName(name)
     if not name then return "" end
-    local baseName = name:match("^(.-)%-.+$")
-    return baseName or name
+    local trimmed = name:match("^%s*(.-)%s*$")
+    local baseName = trimmed:match("^(.-)%-")
+    return baseName or trimmed
+end
+
+function AssignmentModule:StripActiveRoster()
+    if not self.activeRoster then return end
+    for i, entry in ipairs(self.activeRoster) do
+        if type(entry) == "table" and entry.name then
+            entry.name = self:GetDisplayName(entry.name)
+        elseif type(entry) == "string" then
+            self.activeRoster[i] = self:GetDisplayName(entry)
+        end
+    end
 end
 
 AssignmentModule.raids = AssignmentData or {} 
@@ -201,7 +213,7 @@ function AssignmentModule:CreateDraggableNameFrame(parent, playerName, classColo
     frame.originalX, frame.originalY = nil, nil
     frame:SetScript("OnMouseDown", function(self, button)
         if button == "LeftButton" then
-            if _G.ClearAllEditFocus then _G.ClearAllEditFocus() end 
+            if ClearAllEditFocus then ClearAllEditFocus() end 
             AssignmentModule.DragContainer = AssignmentModule.DragContainer or CreateFrame("Frame", "Assignment_DragContainer", UIParent)
             local dragLayer = AssignmentModule.DragContainer
             dragLayer:SetAllPoints(UIParent)
@@ -508,6 +520,7 @@ function AssignmentModule:CreateConfigPanel(parent)
             end
         end
         AssignmentModule.activeRoster = rosterList
+        AssignmentModule:StripActiveRoster()
         AssignmentModule:UpdateRosterList()
     end)
 
@@ -546,6 +559,7 @@ function AssignmentModule:CreateConfigPanel(parent)
                 end
             end
             AssignmentModule.activeRoster = rosterList
+            AssignmentModule:StripActiveRoster()
             AssignmentModule:UpdateRosterList()
         end
     end)
