@@ -67,6 +67,11 @@ Clicking an icon generates a macro for that specific **world marker** or **icon*
 
 ---
 
+### ❌ Marks 
+Set permanent marks on players for assigning them to mechanics or make them more visible. 
+
+---
+
 ### 🔀 Split Helper
 Helps ensure players are on the correct characters:
 - Useful for split raids
