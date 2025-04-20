@@ -1,26 +1,21 @@
+
 local function GetACT()
     return LibStub("AceAddon-3.0"):GetAddon("ACT", true)
 end
 
-local function SomeAPIFunction(...)
+local function IsIntegrationEnabled()
     local act = GetACT()
-    if not act then
-        return
-    end
-    local nicknames = act.db and act.db.profile and act.db.profile.nicknames or {}
+    return act and act.db and act.db.profile and act.db.profile.useNicknameIntegration
 end
 
 local function GetNicknamesMap()
-    if not ACT or not ACT.db or not ACT.db.profile then 
-        return {} 
-    end
-    return ACT.db.profile.nicknames or {}
+    local act = GetACT()
+    if not act or not act.db or not act.db.profile then return {} end
+    return act.db.profile.nicknames or {}
 end
 
 local function FindNicknameEntry(nicknamesMap, nickname)
-    if not nickname then 
-        return nil 
-    end
+    if not nickname then return nil end
     nickname = nickname:lower()
     for key, data in pairs(nicknamesMap) do
         if key:lower() == nickname then
@@ -102,6 +97,8 @@ local NicknameAPI = {
         return GetNicknamesMap()
     end
 }
+
+_G.NicknameAPI = NicknameAPI
 
 -- LiquidAPI (Thanks Ironi teehee)
 local unitIDs = {
@@ -272,51 +269,66 @@ if WeakAuras then
     end
 end
 
--- Cell
-local function UpdateCellNicknames()
-    if not C_AddOns.IsAddOnLoaded("Cell") then return end
+-- ElvUI
+local elvInitialized = false
+local function SetupElvUITags()
+    if elvInitialized then return end
+    if not ElvUF or not ElvUF.Tags then return end
+    elvInitialized = true
+    ElvUF.Tags.Events['nickname']        = 'UNIT_NAME_UPDATE'
+    ElvUF.Tags.Events['nickname:Short']  = 'UNIT_NAME_UPDATE'
+    ElvUF.Tags.Events['nickname:Medium'] = 'UNIT_NAME_UPDATE'
 
-    if not (ACT and ACT.db and ACT.db.profile and ACT.db.profile.useNicknameIntegration) then
-        if CellDB and CellDB.nicknames and CellDB.nicknames.list then
-            local managedCharacters = {}
-            local nicknameData = NicknameAPI:GetAllNicknames()
-            for _, data in pairs(nicknameData) do
-                if data.characters then
-                    for _, charData in ipairs(data.characters) do
-                        if charData.character then
-                            managedCharacters[charData.character] = true
-                        end
-                    end
-                end
+    local function makeGetter(max)
+        return function(unit)
+            local name = UnitName(unit)
+            if not name then return "" end
+            if not IsIntegrationEnabled() then
+                return max and string.sub(name,1,max) or name
             end
-
-            for i = #CellDB.nicknames.list, 1, -1 do
-                local character = CellDB.nicknames.list[i]:match("^([^:]+):")
-                if managedCharacters[character] then
-                    local entry = CellDB.nicknames.list[i]
-                    table.remove(CellDB.nicknames.list, i)
-                    if Cell then
-                        local name = entry:match("^([^:]+)")
-                        Cell:Fire("UpdateNicknames", "list-update", name, nil)
-                    end
-                end
-            end
+            local nick = NicknameAPI:GetNicknameByCharacter(name) or name
+            return max and string.sub(nick,1,max) or nick
         end
-        return
     end
 
-    if not CellDB or not CellDB.nicknames then return end
+    ElvUF.Tags.Methods['nickname']           = makeGetter(nil)
+    ElvUF.Tags.Methods['nickname:veryshort'] = makeGetter(5)
+    ElvUF.Tags.Methods['nickname:short']     = makeGetter(8)
+    ElvUF.Tags.Methods['nickname:medium']    = makeGetter(10)
+end
+
+-- Grid2
+local grid2Initialized = false
+local function InitializeGrid2()
+    if grid2Initialized or not Grid2 then return end
+    grid2Initialized = true
+    local Name = Grid2.statusPrototype:new("name")
+    Name.IsActive = Grid2.statusLibrary.IsActive
+    function Name:UNIT_NAME_UPDATE(_, unit) self:UpdateIndicators(unit) end
+    function Name:OnEnable()   self:RegisterEvent("UNIT_NAME_UPDATE") end
+    function Name:OnDisable()  self:UnregisterEvent("UNIT_NAME_UPDATE") end
+    function Name:GetText(unit)
+        local name = UnitName(unit)
+        if not IsIntegrationEnabled() then return name end
+        return name and NicknameAPI:GetNicknameByCharacter(name) or name
+    end
+    local function Create(baseKey, dbx) Grid2:RegisterStatus(Name,{"text"},baseKey,dbx); return Name end
+    Grid2.setupFunc["name"] = Create
+    Grid2:DbSetStatusDefaultValue("name",{ type="name" })
+end
+
+-- Cell
+local cellInitialized = false
+local function UpdateCellNicknames()
+    if not C_AddOns.IsAddOnLoaded("Cell") or not CellDB or not CellDB.nicknames then return end
+    if cellInitialized and not IsIntegrationEnabled() then return end
 
     local nicknameData = NicknameAPI:GetAllNicknames()
-    
     local currentEntries = {}
     for i, entry in ipairs(CellDB.nicknames.list) do
         local character, nickname = entry:match("^([^:]+):(.+)$")
         if character then
-            currentEntries[character] = {
-                index = i,
-                nickname = nickname
-            }
+            currentEntries[character] = {index=i, nickname=nickname}
         end
     end
 
@@ -326,229 +338,110 @@ local function UpdateCellNicknames()
                 if charData.character then
                     local current = currentEntries[charData.character]
                     local newEntry = string.format("%s:%s", charData.character, nickname)
-                    
                     if current then
                         if current.nickname ~= nickname then
                             CellDB.nicknames.list[current.index] = newEntry
-                            Cell:Fire("UpdateNicknames", "list-update", charData.character, nickname)
+                            if Cell then Cell:Fire("UpdateNicknames","list-update",charData.character,nickname) end
                         end
                         currentEntries[charData.character] = nil
                     else
-                        table.insert(CellDB.nicknames.list, newEntry)
-                        Cell:Fire("UpdateNicknames", "list-update", charData.character, nickname)
+                        table.insert(CellDB.nicknames.list,newEntry)
+                        if Cell then Cell:Fire("UpdateNicknames","list-update",charData.character,nickname) end
                     end
                 end
             end
         end
     end
 
-    for character, data in pairs(currentEntries) do
-        table.remove(CellDB.nicknames.list, data.index)
-        Cell:Fire("UpdateNicknames", "list-update", character, nil)
+    for character,data in pairs(currentEntries) do
+        table.remove(CellDB.nicknames.list,data.index)
+        if Cell then Cell:Fire("UpdateNicknames","list-update",character,nil) end
     end
 
     CellDB.nicknames.custom = true
+    cellInitialized = true
 end
 
--- ElvUI
-if ElvUF and ElvUF.Tags then
-    ElvUF.Tags.Events['nickname']       = 'UNIT_NAME_UPDATE'
-    ElvUF.Tags.Events['nickname:Short']  = 'UNIT_NAME_UPDATE'
-    ElvUF.Tags.Events['nickname:Medium'] = 'UNIT_NAME_UPDATE'
-
-    ElvUF.Tags.Methods['nickname'] = function(unit)
-        local name = UnitName(unit)
-        if not name then
-            return ""
-        end
-        if not (ACT and ACT.db and ACT.db.profile and ACT.db.profile.useNicknameIntegration) then
-            return name
-        end
-        return NicknameAPI:GetNicknameByCharacter(name) or name
-    end
-
-    ElvUF.Tags.Methods['nickname:veryshort'] = function(unit)
-        local name = UnitName(unit)
-        if not name then
-            return ""
-        end
-        if not (ACT and ACT.db and ACT.db.profile and ACT.db.profile.useNicknameIntegration) then
-            return string.sub(name, 1, 5)
-        end
-        local nick = NicknameAPI:GetNicknameByCharacter(name) or name
-        return string.sub(nick, 1, 5)
-    end
-
-    ElvUF.Tags.Methods['nickname:short'] = function(unit)
-        local name = UnitName(unit)
-        if not name then
-            return ""
-        end
-        if not (ACT and ACT.db and ACT.db.profile and ACT.db.profile.useNicknameIntegration) then
-            return string.sub(name, 1, 8)
-        end
-        local nick = NicknameAPI:GetNicknameByCharacter(name) or name
-        return string.sub(nick, 1, 8)
-    end
-
-    ElvUF.Tags.Methods['nickname:medium'] = function(unit)
-        local name = UnitName(unit)
-        if not name then
-            return ""
-        end
-        if not (ACT and ACT.db and ACT.db.profile and ACT.db.profile.useNicknameIntegration) then
-            return string.sub(name, 1, 10)
-        end
-        local nick = NicknameAPI:GetNicknameByCharacter(name) or name
-        return string.sub(nick, 1, 10)
-    end
-end
-
--- Grid2
-local function InitializeGrid2()
-    if not Grid2 then return end
-
-    local Name = Grid2.statusPrototype:new("name")
-    Name.IsActive = Grid2.statusLibrary.IsActive
-
-    function Name:UNIT_NAME_UPDATE(_, unit)
-        self:UpdateIndicators(unit)
-    end
-
-    function Name:OnEnable()
-        self:RegisterEvent("UNIT_NAME_UPDATE")
-    end
-
-    function Name:OnDisable()
-        self:UnregisterEvent("UNIT_NAME_UPDATE")
-    end
-
-    function Name:GetText(unit)
-        local name = UnitName(unit)
-        if not (ACT and ACT.db and ACT.db.profile and ACT.db.profile.useNicknameIntegration) then
-            return name
-        end
-        return name and NicknameAPI:GetNicknameByCharacter(name) or name
-    end
-
-    local function Create(baseKey, dbx)
-        Grid2:RegisterStatus(Name, {"text"}, baseKey, dbx)
-        return Name
-    end
-
-    Grid2.setupFunc["name"] = Create
-    Grid2:DbSetStatusDefaultValue("name", { type = "name" })
-end
-
-if C_AddOns.IsAddOnLoaded("Grid2") then
-    InitializeGrid2()
-end
-
--- Default frames
-local function UpdateDefaultFrames()
-    local hookedFrames = {}
-    
-    local function HookFrameName(frame)
-        if hookedFrames[frame] or not frame.name then return end
-    
-        frame.name.OriginalSetText = frame.name.SetText
-    
-        hooksecurefunc(frame.name, "SetText", function(self, text)
-            if not ACT or not ACT.db.profile.useNicknameIntegration then return end
-
-            local baseName = text and text:match("^([^-]+)") or ""
-            local nickname = NicknameAPI:GetNicknameByCharacter(baseName)
-
-            if nickname then
-                self:OriginalSetText(nickname)
-            end
-        end)
-    
-        hookedFrames[frame] = true
-    end
-
-    local function UpdateFrameName(frame)
-        if not frame or not frame.unit then return end
-        HookFrameName(frame)
-        
-        if frame.name:GetText() then
-            frame.name:SetText(frame.name:GetText())
-        end
-    end
-
-    local function UpdateAllFrames()
-        for i = 1, 8 do
-            local frame = _G["CompactPartyFrameMember" .. i]
-            if frame and frame:IsVisible() then
-                UpdateFrameName(frame)
-            end
-        end
-
-        for i = 1, 40 do
-            local frame = _G["CompactRaidFrame" .. i]
-            if frame and frame:IsVisible() then
-                UpdateFrameName(frame)
-            end
-
-            for j = 1, 5 do
-                local groupFrame = _G["CompactRaidGroup" .. i .. "Member" .. j]
-                if groupFrame and groupFrame:IsVisible() then
-                    UpdateFrameName(groupFrame)
-                end
-            end
-        end
-    end
-
-    local eventFrame = CreateFrame("Frame")
-    eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-    eventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
-    eventFrame:RegisterEvent("UNIT_NAME_UPDATE")
-
-    eventFrame:SetScript("OnEvent", function(self, event, unit)
-        if event == "UNIT_NAME_UPDATE" then
-            for i = 1, 40 do
-                local frame = _G["CompactRaidFrame" .. i]
-                if frame and frame.unit == unit then
-                    UpdateFrameName(frame)
-                    break
-                end
-            end
-        else
-            C_Timer.After(0.5, UpdateAllFrames)
-        end
-    end)
-
-    C_Timer.After(1, UpdateAllFrames)
-end
-
--- MRT cooldown bars
+-- MRT
+local mrtInitialized = false
 local function InitializeMRT()
-    if not C_AddOns.IsAddOnLoaded("MRT") or not GMRT or not GMRT.F then return end
-    
+    if mrtInitialized or not C_AddOns.IsAddOnLoaded("MRT") or not GMRT or not GMRT.F then return end
     GMRT.F:RegisterCallback("RaidCooldowns_Bar_TextName", function(_, _, gsubData)
-        if not (ACT and ACT.db and ACT.db.profile and ACT.db.profile.useNicknameIntegration) then
-            return
-        end
+        if not IsIntegrationEnabled() then return end
         if gsubData and gsubData.name then
             gsubData.name = NicknameAPI:GetNicknameByCharacter(gsubData.name) or gsubData.name
         end
     end)
+    mrtInitialized = true
+end
+
+-- Default Frames
+local function UpdateDefaultFrames()
+    local hookedFrames = {}
+    local function HookFrameName(frame)
+        if hookedFrames[frame] or not frame.name then return end
+        frame.name.OriginalSetText = frame.name.SetText
+        hooksecurefunc(frame.name,"SetText",function(self,text)
+            if not IsIntegrationEnabled() then return end
+            local baseName = text and text:match("^([^-]+)") or ""
+            local nickname = NicknameAPI:GetNicknameByCharacter(baseName)
+            if nickname then self:OriginalSetText(nickname) end
+        end)
+        hookedFrames[frame] = true
+    end
+    local function UpdateFrameName(frame)
+        if not frame or not frame.unit then return end
+        HookFrameName(frame)
+        if frame.name:GetText() then frame.name:SetText(frame.name:GetText()) end
+    end
+    local function UpdateAllFrames()
+        for i=1,8 do local f=_G["CompactPartyFrameMember"..i]; if f and f:IsVisible() then UpdateFrameName(f) end end
+        for i=1,40 do
+            local f=_G["CompactRaidFrame"..i]; if f and f:IsVisible() then UpdateFrameName(f) end
+            for j=1,5 do local g=_G["CompactRaidGroup"..i.."Member"..j]; if g and g:IsVisible() then UpdateFrameName(g) end end
+        end
+    end
+    local eventFrame = CreateFrame("Frame")
+    eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    eventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
+    eventFrame:RegisterEvent("UNIT_NAME_UPDATE")
+    eventFrame:SetScript("OnEvent",function(self,event,unit)
+        if event=="UNIT_NAME_UPDATE" then
+            for i=1,40 do local f=_G["CompactRaidFrame"..i]; if f and f.unit==unit then UpdateFrameName(f); break end end
+        else
+            C_Timer.After(0.5,UpdateAllFrames)
+        end
+    end)
+    C_Timer.After(1,UpdateAllFrames)
 end
 
 -- Load shit
+local firstLoad = false
 local initFrame = CreateFrame("Frame")
 initFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 initFrame:RegisterEvent("ADDON_LOADED")
 
-initFrame:SetScript("OnEvent", function(self, event, arg1)
-    if event == "PLAYER_ENTERING_WORLD" and firstLoad ~= "1" then
+local function addonInitDispatcher(addonName)
+    if addonName=="ElvUI" then C_Timer.After(0,SetupElvUITags) end
+    if addonName=="Grid2" then InitializeGrid2() end
+    if addonName=="Cell" then UpdateCellNicknames() end
+    if addonName=="MRT" then InitializeMRT() end
+end
+
+initFrame:SetScript("OnEvent",function(self,event,arg1)
+    if event=="PLAYER_ENTERING_WORLD" and not firstLoad then
+        firstLoad=true
         UpdateDefaultFrames()
-        firstLoad = "1"
-        if C_AddOns.IsAddOnLoaded("Cell") then
-            UpdateCellNicknames()
-        end
-        if C_AddOns.IsAddOnLoaded("MRT") then
-            InitializeMRT()
-        end
+        if C_AddOns.IsAddOnLoaded("ElvUI") then SetupElvUITags() end
+        if C_AddOns.IsAddOnLoaded("Grid2") then InitializeGrid2() end
+        if C_AddOns.IsAddOnLoaded("Cell") then UpdateCellNicknames() end
+        if C_AddOns.IsAddOnLoaded("MRT") then InitializeMRT() end
+    elseif event=="ADDON_LOADED" then
+        addonInitDispatcher(arg1)
     end
 end)
+
+if C_AddOns.IsAddOnLoaded("ElvUI") then SetupElvUITags() end
+if C_AddOns.IsAddOnLoaded("Grid2") then InitializeGrid2() end
+if C_AddOns.IsAddOnLoaded("Cell") then UpdateCellNicknames() end
+if C_AddOns.IsAddOnLoaded("MRT") then InitializeMRT() end
