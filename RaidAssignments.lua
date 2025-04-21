@@ -1,4 +1,5 @@
 AssignmentModule = {} 
+AssignmentModule.rosterLoaded = false
 AssignmentModule.title = "Assignments"  
 
 VACT = VACT or {}
@@ -175,18 +176,39 @@ function AssignmentModule:UpdateRosterList()
     local totalEntries = index
     local lineHeight = 22
     local contentHeight = 0
-    local extraPaddingMinimal = 5 
-    local bottomPadding = 10  
+    local extraPaddingMinimal = 5
+    local bottomPadding = 10
     if totalEntries < 40 then
         contentHeight = totalEntries * lineHeight + extraPaddingMinimal
     else
         contentHeight = 40 * lineHeight + bottomPadding
     end
-
     self.nameListContent:SetHeight(contentHeight)
 
     if self.rosterScroll then
         self.rosterScroll:SetVerticalScroll(0)
+    end
+
+    if self.currentSlots then
+        local rosterLookup = {}
+        for _, entry in ipairs(self.activeRoster or {}) do
+            local n = (type(entry) == "table") and entry.name or entry
+            rosterLookup[n] = true
+        end
+
+        local defaultR, defaultG, defaultB, defaultA = 0.1, 0.1, 0.1, 1
+        local badR, badG, badB, badA         = 1.0, 0.2, 0.2, 0.5
+
+        for _, group in ipairs(self.currentSlots) do
+            for _, slot in ipairs(group) do
+                local container = slot:GetParent()
+                if self.rosterLoaded and slot.usedName and not rosterLookup[slot.usedName] then
+                    container:SetBackdropColor(badR, badG, badB, badA)
+                else
+                    container:SetBackdropColor(defaultR, defaultG, defaultB, defaultA)
+                end
+            end
+        end
     end
 end
 
@@ -458,6 +480,7 @@ function AssignmentModule:LoadBossUI(bossId)
                             end
                             self.dragFrame = nil
                         end
+                        AssignmentModule:UpdateRosterList()
                     end)
                 end
             end
@@ -506,9 +529,7 @@ function AssignmentModule:CreateConfigPanel(parent)
     grabButton:SetPoint("LEFT", presetsDropdown, "RIGHT", 20, 0)
     grabButton:SetScript("OnClick", function()
         AssignmentModule.selectedPresetIndex = nil
-        if AssignmentModule.presetsDropdown then
-            AssignmentModule.presetsDropdown.button.text:SetText("Roster Preset")
-        end
+        AssignmentModule.presetsDropdown.button.text:SetText("Roster Preset")
         local rosterList = {}
         if IsInRaid() then
             local numRaid = GetNumGroupMembers() or 0
@@ -521,6 +542,7 @@ function AssignmentModule:CreateConfigPanel(parent)
         end
         AssignmentModule.activeRoster = rosterList
         AssignmentModule:StripActiveRoster()
+        AssignmentModule.rosterLoaded = true 
         AssignmentModule:UpdateRosterList()
     end)
 
@@ -532,15 +554,8 @@ function AssignmentModule:CreateConfigPanel(parent)
             AssignmentModule.presetsDropdown.button.text:SetText("Roster Preset")
         end
         AssignmentModule.activeRoster = {}
+        AssignmentModule.rosterLoaded  = false
         AssignmentModule:UpdateRosterList()
-        if AssignmentModule.currentSlots then
-            for _, group in ipairs(AssignmentModule.currentSlots) do
-                for _, slot in ipairs(group) do
-                    slot:SetText("")
-                    slot.usedName = nil
-                end
-            end
-        end
     end)
 
     local applyButton = UI:CreateButton(configPanel, "Apply Roster", 120, 30)
@@ -560,6 +575,7 @@ function AssignmentModule:CreateConfigPanel(parent)
             end
             AssignmentModule.activeRoster = rosterList
             AssignmentModule:StripActiveRoster()
+            AssignmentModule.rosterLoaded = true  
             AssignmentModule:UpdateRosterList()
         end
     end)
