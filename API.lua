@@ -318,17 +318,28 @@ local function InitializeGrid2()
 end
 
 -- Cell
-local cellInitialized = false
 local function UpdateCellNicknames()
     if not C_AddOns.IsAddOnLoaded("Cell") or not CellDB or not CellDB.nicknames then return end
-    if cellInitialized and not IsIntegrationEnabled() then return end
 
-    local nicknameData = NicknameAPI:GetAllNicknames()
+    if not IsIntegrationEnabled() then
+        for i = #CellDB.nicknames.list, 1, -1 do
+            local entry = CellDB.nicknames.list[i]
+            local character, nickname = entry:match("^([^:]+):(.+)$")
+            if character and FindNicknameEntry(GetNicknamesMap(), nickname) then
+                table.remove(CellDB.nicknames.list, i)
+                if Cell then Cell:Fire("UpdateNicknames", "list-update", character, nil) end
+            end
+        end
+        return
+    end
+
+    local nicknameData = GetNicknamesMap()
     local currentEntries = {}
+    
     for i, entry in ipairs(CellDB.nicknames.list) do
         local character, nickname = entry:match("^([^:]+):(.+)$")
         if character then
-            currentEntries[character] = {index=i, nickname=nickname}
+            currentEntries[character] = {index = i, nickname = nickname}
         end
     end
 
@@ -341,25 +352,24 @@ local function UpdateCellNicknames()
                     if current then
                         if current.nickname ~= nickname then
                             CellDB.nicknames.list[current.index] = newEntry
-                            if Cell then Cell:Fire("UpdateNicknames","list-update",charData.character,nickname) end
+                            if Cell then Cell:Fire("UpdateNicknames", "list-update", charData.character, nickname) end
                         end
                         currentEntries[charData.character] = nil
                     else
-                        table.insert(CellDB.nicknames.list,newEntry)
-                        if Cell then Cell:Fire("UpdateNicknames","list-update",charData.character,nickname) end
+                        table.insert(CellDB.nicknames.list, newEntry)
+                        if Cell then Cell:Fire("UpdateNicknames", "list-update", charData.character, nickname) end
                     end
                 end
             end
         end
     end
 
-    for character,data in pairs(currentEntries) do
-        table.remove(CellDB.nicknames.list,data.index)
-        if Cell then Cell:Fire("UpdateNicknames","list-update",character,nil) end
+    for character, data in pairs(currentEntries) do
+        table.remove(CellDB.nicknames.list, data.index)
+        if Cell then Cell:Fire("UpdateNicknames", "list-update", character, nil) end
     end
 
     CellDB.nicknames.custom = true
-    cellInitialized = true
 end
 
 -- MRT
@@ -416,7 +426,6 @@ local function UpdateDefaultFrames()
 end
 
 -- Load shit
-local firstLoad = false
 local initFrame = CreateFrame("Frame")
 initFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 initFrame:RegisterEvent("ADDON_LOADED")
@@ -424,24 +433,22 @@ initFrame:RegisterEvent("ADDON_LOADED")
 local function addonInitDispatcher(addonName)
     if addonName=="ElvUI" then C_Timer.After(0,SetupElvUITags) end
     if addonName=="Grid2" then InitializeGrid2() end
-    if addonName=="Cell" then UpdateCellNicknames() end
     if addonName=="MRT" then InitializeMRT() end
 end
 
-initFrame:SetScript("OnEvent",function(self,event,arg1)
-    if event=="PLAYER_ENTERING_WORLD" and not firstLoad then
-        firstLoad=true
+initFrame:SetScript("OnEvent", function(self, event, arg1)
+    if event == "PLAYER_ENTERING_WORLD" then
+        UpdateCellNicknames()
         UpdateDefaultFrames()
         if C_AddOns.IsAddOnLoaded("ElvUI") then SetupElvUITags() end
         if C_AddOns.IsAddOnLoaded("Grid2") then InitializeGrid2() end
-        if C_AddOns.IsAddOnLoaded("Cell") then UpdateCellNicknames() end
         if C_AddOns.IsAddOnLoaded("MRT") then InitializeMRT() end
-    elseif event=="ADDON_LOADED" then
+
+    elseif event == "ADDON_LOADED" then
         addonInitDispatcher(arg1)
     end
 end)
 
 if C_AddOns.IsAddOnLoaded("ElvUI") then SetupElvUITags() end
 if C_AddOns.IsAddOnLoaded("Grid2") then InitializeGrid2() end
-if C_AddOns.IsAddOnLoaded("Cell") then UpdateCellNicknames() end
 if C_AddOns.IsAddOnLoaded("MRT") then InitializeMRT() end
