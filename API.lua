@@ -28,8 +28,8 @@ end
 -- Nickname API
 local NicknameAPI = {
     GetNicknameByCharacter = function(_, characterName)
-        if not characterName or type(characterName) ~= "string" then 
-            return nil 
+        if not characterName or type(characterName) ~= "string" then
+            return nil
         end
 
         characterName = characterName:lower()
@@ -66,8 +66,8 @@ local NicknameAPI = {
     end,
 
     GetCharacterByNickname = function(_, nickname)
-        if not nickname or type(nickname) ~= "string" then 
-            return nil 
+        if not nickname or type(nickname) ~= "string" then
+            return nil
         end
 
         local entry = FindNicknameEntry(GetNicknamesMap(), nickname)
@@ -78,8 +78,8 @@ local NicknameAPI = {
     end,
 
     GetAllCharactersByNickname = function(_, nickname)
-        if not nickname or type(nickname) ~= "string" then 
-            return {} 
+        if not nickname or type(nickname) ~= "string" then
+            return {}
         end
 
         local entry = FindNicknameEntry(GetNicknamesMap(), nickname)
@@ -245,15 +245,15 @@ if WeakAuras then
             local unitName = GetUnitName(unit, showServer)
             if not unitName then return end
             if not UnitIsPlayer(unit) then return unitName end
-            
+
             local nickname = NicknameAPI:GetNicknameByCharacter(unitName)
             if not nickname then return unitName end
-            
+
             if showServer then
                 local n, s = strsplit("-", unitName)
                 return s and string.format("%s-%s", nickname, s) or nickname
             end
-            
+
             return nickname
         end
     end
@@ -317,56 +317,84 @@ local function InitializeGrid2()
     Grid2:DbSetStatusDefaultValue("name",{ type="name" })
 end
 
--- Cell
-local function UpdateCellNicknames()
-    if not C_AddOns.IsAddOnLoaded("Cell") or not CellDB or not CellDB.nicknames then return end
+-- Cell, completely hack before I finally stop using savedvariables but yeeehaw cowboy
+local function UpdateCellNicknames(_delayed)
+    if not CellDB or not CellDB.nicknames then return end
 
     if not IsIntegrationEnabled() then
         for i = #CellDB.nicknames.list, 1, -1 do
-            local entry = CellDB.nicknames.list[i]
-            local character, nickname = entry:match("^([^:]+):(.+)$")
+            local entry     = CellDB.nicknames.list[i]
+            local character = entry:match("^([^:]+):")
+            local nickname  = entry:match(":(.+)$")
             if character and FindNicknameEntry(GetNicknamesMap(), nickname) then
                 table.remove(CellDB.nicknames.list, i)
-                if Cell then Cell:Fire("UpdateNicknames", "list-update", character, nil) end
+                if Cell and Cell.Fire then
+                    Cell:Fire("UpdateNicknames", "list-update", character, nil)
+                end
             end
         end
+        CellDB.nicknames.custom = false
         return
     end
 
-    local nicknameData = GetNicknamesMap()
-    local currentEntries = {}
-    
+    if not _delayed then
+        C_Timer.After(0, function() UpdateCellNicknames(true) end)
+    end
+
+    local current = {}
     for i, entry in ipairs(CellDB.nicknames.list) do
-        local character, nickname = entry:match("^([^:]+):(.+)$")
-        if character then
-            currentEntries[character] = {index = i, nickname = nickname}
+        local charFull, nick = entry:match("^([^:]+):(.+)$")
+        if charFull then
+            local charBase = charFull:match("^([^-]+)") or charFull
+            current[charBase:lower()] = { idx = i, nick = nick, full = charFull }
         end
     end
 
-    for nickname, data in pairs(nicknameData) do
+    local nnMap = GetNicknamesMap()
+    for nick, data in pairs(nnMap) do
         if data.characters then
-            for _, charData in ipairs(data.characters) do
-                if charData.character then
-                    local current = currentEntries[charData.character]
-                    local newEntry = string.format("%s:%s", charData.character, nickname)
-                    if current then
-                        if current.nickname ~= nickname then
-                            CellDB.nicknames.list[current.index] = newEntry
-                            if Cell then Cell:Fire("UpdateNicknames", "list-update", charData.character, nickname) end
+            for _, cdata in ipairs(data.characters) do
+                local charBase = cdata.character
+                if charBase and charBase ~= "" then
+                    local key  = charBase:lower()
+                    local cur  = current[key]
+                    local charFull = cur and cur.full or charBase
+                    local newEntry  = charFull .. ":" .. nick
+
+                    if cur then
+                        if cur.nick ~= nick then
+                            CellDB.nicknames.list[cur.idx] = newEntry
+                            if Cell and Cell.Fire then
+                                Cell:Fire("UpdateNicknames", "list-update", charFull, nick)
+                            end
                         end
-                        currentEntries[charData.character] = nil
+                        current[key] = nil
                     else
                         table.insert(CellDB.nicknames.list, newEntry)
-                        if Cell then Cell:Fire("UpdateNicknames", "list-update", charData.character, nickname) end
+                        if Cell and Cell.Fire then
+                            Cell:Fire("UpdateNicknames", "list-update", charFull, nick)
+                        end
                     end
                 end
             end
         end
     end
 
-    for character, data in pairs(currentEntries) do
-        table.remove(CellDB.nicknames.list, data.index)
-        if Cell then Cell:Fire("UpdateNicknames", "list-update", character, nil) end
+    if next(current) then
+        local toDelete = {}
+        for _, info in pairs(current) do
+            table.insert(toDelete, info.idx)
+        end
+        table.sort(toDelete, function(a, b) return a > b end)
+
+        for _, idx in ipairs(toDelete) do
+            local entry   = CellDB.nicknames.list[idx]
+            local charFull = entry:match("^([^:]+):") or ""
+            table.remove(CellDB.nicknames.list, idx)
+            if Cell and Cell.Fire then
+                Cell:Fire("UpdateNicknames", "list-update", charFull, nil)
+            end
+        end
     end
 
     CellDB.nicknames.custom = true
@@ -426,26 +454,18 @@ local function UpdateDefaultFrames()
 end
 
 -- Load shit
+local firstLoad = true
 local initFrame = CreateFrame("Frame")
 initFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 initFrame:RegisterEvent("ADDON_LOADED")
 
-local function addonInitDispatcher(addonName)
-    if addonName=="ElvUI" then C_Timer.After(0,SetupElvUITags) end
-    if addonName=="Grid2" then InitializeGrid2() end
-    if addonName=="MRT" then InitializeMRT() end
-end
-
 initFrame:SetScript("OnEvent", function(self, event, arg1)
     if event == "PLAYER_ENTERING_WORLD" then
         UpdateCellNicknames()
-        UpdateDefaultFrames()
-        if C_AddOns.IsAddOnLoaded("ElvUI") then SetupElvUITags() end
-        if C_AddOns.IsAddOnLoaded("Grid2") then InitializeGrid2() end
-        if C_AddOns.IsAddOnLoaded("MRT") then InitializeMRT() end
-
-    elseif event == "ADDON_LOADED" then
-        addonInitDispatcher(arg1)
+        if firstLoad then
+            UpdateDefaultFrames()
+            firstLoad = false
+        end
     end
 end)
 

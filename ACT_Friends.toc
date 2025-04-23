@@ -5,7 +5,7 @@
 ## SavedVariables: ACTDB, VACT
 ## Version: 2.3
 ## IconTexture: Interface\AddOns\ACT_Friends\media\MiniMap.tga
-## OptionalDeps: ElvUI, WeakAuras, Cell, Grid2, MRT
+## OptionalDeps: ElvUI, WeakAuras, Grid2, MRT
 ## Category: Advance Friends
 embeds.xml
 libs\AceComm-3.0\AceComm-3.0.xml
