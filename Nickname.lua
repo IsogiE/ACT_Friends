@@ -52,17 +52,21 @@ function NicknameModule:CleanupEmptyNicknames()
 end
 
 AceComm:RegisterComm(PUSH_PREFIX, function(prefix, message, distribution, sender)
-    if prefix == PUSH_PREFIX then
-        local decoded = LibDeflate:DecodeForPrint(message)
-        local decompressed = LibDeflate:DecompressDeflate(decoded)
-        if decompressed then
-            NicknameModule:ProcessDefaultImportString(decompressed)
-            ACT.db.profile.defaultNicknames = decompressed
-            NicknameModule:CleanupEmptyNicknames()
-            NicknameModule:RefreshContent()
-            NicknameModule:PromptPushReload_Default(sender)
-        end
+    if prefix ~= PUSH_PREFIX then return end
+
+    local decoded      = LibDeflate:DecodeForPrint(message)
+    local decompressed = LibDeflate:DecompressDeflate(decoded)
+    if not decompressed then return end
+
+    if decompressed == (ACT.db.profile.defaultNicknames or "") then
+        return
     end
+
+    NicknameModule:ProcessDefaultImportString(decompressed)
+    ACT.db.profile.defaultNicknames = decompressed
+    NicknameModule:CleanupEmptyNicknames()
+    NicknameModule:RefreshContent()
+    NicknameModule:PromptPushReload_Default(sender)
 end)
 
 AceComm:RegisterComm(KILL_PREFIX, function(prefix, message, distribution, sender)
@@ -186,13 +190,11 @@ function NicknameModule:ConfirmPushDefault()
                     NicknameModule:ProcessDefaultImportString(ACT.db.profile.defaultNicknames)
                     NicknameModule:CleanupEmptyNicknames()
                     NicknameModule:RefreshContent()
-                    NicknameModule:PromptPushReload_Default(UnitName("player"))
                 end
             end,
             function()
                 self.pushDefaultPopup:Hide()
-            end
-        )
+            end)
         self.pushDefaultPopup:SetScript("OnHide", function()
             self.pushDefaultPopup = nil
         end)
@@ -204,7 +206,6 @@ function NicknameModule:PushDefaultNicknames(updateData)
     local compressed = LibDeflate:CompressDeflate(updateData)
     local encoded = LibDeflate:EncodeForPrint(compressed)
     AceComm:SendCommMessage(PUSH_PREFIX, encoded, "RAID")
-    NicknameModule:PromptPushReload_Default(UnitName("player"))
 end
 
 function NicknameModule:GetConfigSize()
