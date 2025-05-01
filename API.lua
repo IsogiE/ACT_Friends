@@ -317,87 +317,61 @@ local function InitializeGrid2()
     Grid2:DbSetStatusDefaultValue("name",{ type="name" })
 end
 
--- Cell, completely hack before I finally stop using savedvariables but yeeehaw cowboy
-local function UpdateCellNicknames(_delayed)
+-- Cell
+function UpdateCellNicknames()
     if not CellDB or not CellDB.nicknames then return end
-
-    if not IsIntegrationEnabled() then
-        for i = #CellDB.nicknames.list, 1, -1 do
-            local entry     = CellDB.nicknames.list[i]
-            local character = entry:match("^([^:]+):")
-            local nickname  = entry:match(":(.+)$")
-            if character and FindNicknameEntry(GetNicknamesMap(), nickname) then
-                table.remove(CellDB.nicknames.list, i)
-                if Cell and Cell.Fire then
-                    Cell:Fire("UpdateNicknames", "list-update", character, nil)
-                end
-            end
-        end
-        CellDB.nicknames.custom = false
-        return
-    end
-
-    if not _delayed then
-        C_Timer.After(0, function() UpdateCellNicknames(true) end)
-    end
-
-    local current = {}
-    for i, entry in ipairs(CellDB.nicknames.list) do
-        local charFull, nick = entry:match("^([^:]+):(.+)$")
-        if charFull then
-            local charBase = charFull:match("^([^-]+)") or charFull
-            current[charBase:lower()] = { idx = i, nick = nick, full = charFull }
-        end
-    end
-
-    local nnMap = GetNicknamesMap()
-    for nick, data in pairs(nnMap) do
-        if data.characters then
-            for _, cdata in ipairs(data.characters) do
-                local charBase = cdata.character
-                if charBase and charBase ~= "" then
-                    local key  = charBase:lower()
-                    local cur  = current[key]
-                    local charFull = cur and cur.full or charBase
-                    local newEntry  = charFull .. ":" .. nick
-
-                    if cur then
-                        if cur.nick ~= nick then
-                            CellDB.nicknames.list[cur.idx] = newEntry
-                            if Cell and Cell.Fire then
-                                Cell:Fire("UpdateNicknames", "list-update", charFull, nick)
-                            end
-                        end
-                        current[key] = nil
-                    else
-                        table.insert(CellDB.nicknames.list, newEntry)
-                        if Cell and Cell.Fire then
-                            Cell:Fire("UpdateNicknames", "list-update", charFull, nick)
-                        end
+    local integrationEnabled = IsIntegrationEnabled()
+    local wanted, wantedSet = {}, {}
+    if integrationEnabled then
+        local nickMap = (ACT and ACT.db and ACT.db.profile and ACT.db.profile.nicknames) or {}
+        for nick, data in pairs(nickMap) do
+            if data.characters then
+                for _, c in ipairs(data.characters) do
+                    local char = (type(c) == "table") and c.character or c
+                    if char and char ~= "" then
+                        local entry = char .. ":" .. nick
+                        wantedSet[entry] = true
+                        table.insert(wanted, entry)
                     end
                 end
             end
         end
     end
 
-    if next(current) then
-        local toDelete = {}
-        for _, info in pairs(current) do
-            table.insert(toDelete, info.idx)
-        end
-        table.sort(toDelete, function(a, b) return a > b end)
+    CellDB.nicknames.list = CellDB.nicknames.list or {}
+    local currentIdx = {}
+    for i, entry in ipairs(CellDB.nicknames.list) do
+        currentIdx[entry] = i
+    end
 
-        for _, idx in ipairs(toDelete) do
-            local entry   = CellDB.nicknames.list[idx]
-            local charFull = entry:match("^([^:]+):") or ""
-            table.remove(CellDB.nicknames.list, idx)
-            if Cell and Cell.Fire then
-                Cell:Fire("UpdateNicknames", "list-update", charFull, nil)
+    local toDelete = {}
+    for entry, idx in pairs(currentIdx) do
+        if not integrationEnabled or not wantedSet[entry] then
+            table.insert(toDelete, idx)
+        end
+    end
+    table.sort(toDelete, function(a, b) return a > b end)
+    for _, idx in ipairs(toDelete) do
+        local gone = table.remove(CellDB.nicknames.list, idx)
+        local char = gone:match("^([^:]+):") or gone
+        if Cell and Cell.Fire then
+            Cell:Fire("UpdateNicknames", "list-update", char, nil)
+        end
+    end
+
+    if integrationEnabled then
+        for _, entry in ipairs(wanted) do
+            if not currentIdx[entry] then
+                table.insert(CellDB.nicknames.list, entry)
+                local char, nick = entry:match("^([^:]+):(.+)$")
+                if Cell and Cell.Fire then
+                    Cell:Fire("UpdateNicknames", "list-update", char, nick)
+                end
             end
         end
     end
 
-    CellDB.nicknames.custom = true
+    CellDB.nicknames.custom = integrationEnabled
 end
 
 -- MRT

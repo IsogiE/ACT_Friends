@@ -13,6 +13,12 @@ ACT.db.profile = ACT.db.profile or {}
 ACT.db.profile.nicknames = ACT.db.profile.nicknames or {}
 ACT.db.profile.defaultNicknames = ACT.db.profile.defaultNicknames or ""
 
+local function SyncCell()
+    if type(UpdateCellNicknames) == "function" then
+        UpdateCellNicknames()
+    end
+end
+
 local function strtrim(s)
     return s and s:match("^%s*(.-)%s*$") or ""
 end
@@ -66,6 +72,7 @@ AceComm:RegisterComm(PUSH_PREFIX, function(prefix, message, distribution, sender
     ACT.db.profile.defaultNicknames = decompressed
     NicknameModule:CleanupEmptyNicknames()
     NicknameModule:RefreshContent()
+    SyncCell()
     NicknameModule:PromptPushReload_Default(sender)
 end)
 
@@ -74,6 +81,7 @@ AceComm:RegisterComm(KILL_PREFIX, function(prefix, message, distribution, sender
         ACT.db.profile.nicknames = {}
         ACT.db.profile.defaultNicknames = ""
         NicknameModule:RefreshContent()
+        SyncCell()
         if not NicknameModule.killswitchPopup then
             NicknameModule.killswitchPopup = UI:CreateTextPopup(
                 "Killswitch Activated",
@@ -190,6 +198,7 @@ function NicknameModule:ConfirmPushDefault()
                     NicknameModule:ProcessDefaultImportString(ACT.db.profile.defaultNicknames)
                     NicknameModule:CleanupEmptyNicknames()
                     NicknameModule:RefreshContent()
+                    SyncCell()
                 end
             end,
             function()
@@ -309,6 +318,7 @@ function NicknameModule:CreateConfigPanel(parent)
         local checked = self:GetChecked()
         ACT.db.profile.useNicknameIntegration = checked
         NicknameModule:RefreshContent()
+        SyncCell()
         NicknameModule:PromptReloadNormal()
     end)
     
@@ -564,6 +574,7 @@ function NicknameModule:RefreshContent()
                         table.insert(ACT.db.profile.nicknames[nickname].characters, { character = text })
                         NicknameModule:CleanupEmptyNicknames()
                         NicknameModule:RefreshContent()
+                        SyncCell()
                         NicknameModule:PromptReloadNormal()
                     end
                     if NicknameModule.characterInputPopup then
@@ -620,6 +631,7 @@ function NicknameModule:RefreshContent()
                                 dropdown.selectedValue = text
                                 NicknameModule:CleanupEmptyNicknames()
                                 NicknameModule:RefreshContent()
+                                SyncCell()
                                 NicknameModule:PromptReloadNormal()
                             end
                         end
@@ -660,6 +672,7 @@ function NicknameModule:RefreshContent()
                     dropdown.selectedValue = nil
                     NicknameModule:CleanupEmptyNicknames()
                     NicknameModule:RefreshContent()
+                    SyncCell()
                     NicknameModule:PromptReloadNormal()
                 end
             end
@@ -862,6 +875,7 @@ function NicknameModule:ShowCharacterInputPopup(nickname, existingCharacter, cal
                 callback(text)
                 NicknameModule:CleanupEmptyNicknames()
                 NicknameModule:RefreshContent()
+                SyncCell()
                 NicknameModule:PromptReloadNormal()
             end
         end,
@@ -884,6 +898,7 @@ function NicknameModule:ShowWipeCustomPopup()
                 NicknameModule:ProcessImportString(defaultStr)
                 NicknameModule:CleanupEmptyNicknames()
                 NicknameModule:RefreshContent()
+                SyncCell()
                 NicknameModule:PromptReloadNormal()
             end,
             function() end
@@ -1131,6 +1146,7 @@ SlashCmdList["SETDEFAULTNICK"] = function(msg)
                     NicknameModule:ProcessDefaultImportString(text)
                     NicknameModule:CleanupEmptyNicknames()
                     NicknameModule:RefreshContent()
+                    SyncCell()
                     NicknameModule:PromptReloadNormal_Default()
                 end
             end,
@@ -1166,6 +1182,7 @@ SlashCmdList["WIPENICKNAMES"] = function(msg)
                 ACT.db.profile.nicknames = {}
                 ACT.db.profile.defaultNicknames = ""
                 NicknameModule:RefreshContent()
+                SyncCell()
                 NicknameModule:PromptReloadNormal()
             end,
             function() end
