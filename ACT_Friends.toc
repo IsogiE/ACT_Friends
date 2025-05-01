@@ -3,7 +3,7 @@
 ## Author: Isogi, Jaf
 ## Notes: Advance Custom Tools (Friends)
 ## SavedVariables: ACTDB, VACT
-## Version: 2.3
+## Version: 2.4
 ## IconTexture: Interface\AddOns\ACT_Friends\media\MiniMap.tga
 ## OptionalDeps: ElvUI, WeakAuras, Grid2, MRT
 ## Category: Advance Friends
