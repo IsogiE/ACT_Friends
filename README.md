@@ -48,11 +48,12 @@ Adds nickname support to:
 
 > **SUF Setup**:  
 > You’ll need to manually add a tag with the following code:
-> function(unit)
+```
+function(unit)
     local name = UnitName(unit)
     return name and LiquidAPI and LiquidAPI:GetName(unit, "SuF") or name
 end
-> 
+```
 > How To:  
 > /suf → Add Tags → Add New Tag → Name it whatever you want > Drop the above code in the Code box, the Events window will update itself → Save.
 > You'll then be able to select the tag in your Unit Configurations 
