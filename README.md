@@ -66,7 +66,7 @@ end
 ---
 
 ### 🧱 Raid Groups
-For easy configuration of your Raid's groups. Simply drag people in, and out of your raid, or just swap their positions in the groups. No longer do you need to drag people in and out of groups to configure your raid frames to look nice. You'll also be able to save or import any preset you'd like for future reference. Sometimes healers just like their frames to look the same every week!
+For easy configuration of your Raid's groups. Simply drag people in, and out of your raid, or just swap their positions in the groups. No longer do you need to drag people in and out of groups to configure your raid frames to look nice. You'll also be able to save or import any preset you'd like for future reference. Sometimes healers just like their frames to look the same every week! If holding Shift when clicking on Import Preset or Delete preset, you will be able to mass import or delete presets. 
 
 ---
 
