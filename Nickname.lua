@@ -136,7 +136,7 @@ end
 
 local function IsPrivilegedUser()
     local battleTag = GetPlayerBattleTag()
-    return (battleTag == "Isogi#21124" or battleTag == "Jafar#21190" or battleTag == "ViklunD#2904" or battleTag ==
+    return (battleTag == "Isogi#21124" or battleTag == "Jafar#21190" or battleTag == "Kieron#21721" or battleTag == "ViklunD#2904" or battleTag ==
                "Strike#2545" or battleTag == "Brokenlenny#2577")
 end
 
