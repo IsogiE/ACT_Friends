@@ -147,8 +147,7 @@ function RaidGroups:ValidateAndNormalizePresetString(text)
         for name in string.gmatch(namesStr, "([^,]+)") do
             local trimmed = name:match("^%s*(.-)%s*$")
             if trimmed ~= "" then
-                local lower = string.lower(trimmed)
-                local normalized = lower:gsub("^%l", string.upper)
+                local normalized = self:NormalizeCharacterName(trimmed)
                 table.insert(names, normalized)
             end
         end
