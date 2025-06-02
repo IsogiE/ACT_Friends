@@ -32,37 +32,41 @@ function WeakAuraUpdaterModule:CheckWeakAurasLoaded()
     end
 end
 
-C_Timer.After(5, function() WeakAuraUpdaterModule:CheckWeakAurasLoaded() end)
+C_Timer.After(5, function()
+    WeakAuraUpdaterModule:CheckWeakAurasLoaded()
+end)
 
 local sendTimeoutFrame = nil
 function WeakAuraUpdaterModule:DistributeWeakAura(weakAuraData, description)
     local messagePrefix = "WEAKAURA_UPDATE:"
     local originalMsg = messagePrefix .. weakAuraData .. "|DESC:" .. (description or "")
-    local compressed = LibDeflate:CompressDeflate(originalMsg, { level = 9 })
+    local compressed = LibDeflate:CompressDeflate(originalMsg, {
+        level = 9
+    })
     local encoded = LibDeflate:EncodeForWoWAddonChannel(compressed)
     local fullMsg = "C" .. encoded .. "##F##"
     local chunkSize = 245
     local totalParts = math.ceil(#fullMsg / chunkSize)
-    
+
     AceComm:SendCommMessage("ADVANCEWEAKAURA", "START:" .. totalParts, "RAID")
-    
+
     local currentChunk = 1
     local function sendNextChunk()
         if currentChunk > totalParts then
             self:SetMessage("WeakAura pushed to raid (complete).")
             return
         end
-        
+
         local chunk = fullMsg:sub((currentChunk - 1) * chunkSize + 1, currentChunk * chunkSize)
         AceComm:SendCommMessage("ADVANCEWEAKAURA", chunk, "RAID")
         self:SetMessage(string.format("Sending WeakAura... %d/%d", currentChunk, totalParts))
-        
+
         currentChunk = currentChunk + 1
         C_Timer.After(0.1, sendNextChunk)
     end
-    
+
     sendNextChunk()
-    
+
     if sendTimeoutFrame then
         sendTimeoutFrame:Cancel()
     end
@@ -71,23 +75,28 @@ function WeakAuraUpdaterModule:DistributeWeakAura(weakAuraData, description)
 end
 
 function WeakAuraUpdaterModule:HandleIncomingWeakAura(prefix, msg, distribution, sender)
-    if prefix ~= "ADVANCEWEAKAURA" then return end
+    if prefix ~= "ADVANCEWEAKAURA" then
+        return
+    end
 
     self.chunkBuffers = self.chunkBuffers or {}
     self.receiveStatus = self.receiveStatus or {}
-    
+
     local actPrefix = "|cff00aaff[ACT]|r "
 
     if msg:sub(1, 6) == "START:" then
         local total = tonumber(msg:sub(7))
         if total then
-            self.receiveStatus[sender] = { expected = total, received = 0 }
+            self.receiveStatus[sender] = {
+                expected = total,
+                received = 0
+            }
             self.chunkBuffers[sender] = ""
             DEFAULT_CHAT_FRAME:AddMessage(string.format("%sReceiving from %s: 0/%d chunks", actPrefix, sender, total))
         end
         return
     end
-    
+
     if not self.receiveStatus[sender] then
         return
     end
@@ -95,28 +104,29 @@ function WeakAuraUpdaterModule:HandleIncomingWeakAura(prefix, msg, distribution,
     self.chunkBuffers[sender] = self.chunkBuffers[sender] .. msg
     self.receiveStatus[sender].received = self.receiveStatus[sender].received + 1
 
-    DEFAULT_CHAT_FRAME:AddMessage(string.format("%sReceiving from %s: %d/%d chunks", actPrefix, sender, self.receiveStatus[sender].received, self.receiveStatus[sender].expected))
+    DEFAULT_CHAT_FRAME:AddMessage(string.format("%sReceiving from %s: %d/%d chunks", actPrefix, sender,
+        self.receiveStatus[sender].received, self.receiveStatus[sender].expected))
 
     if self.chunkBuffers[sender]:sub(-5) == "##F##" then
-        local completeMsg = self.chunkBuffers[sender]:sub(1, -6) 
+        local completeMsg = self.chunkBuffers[sender]:sub(1, -6)
         self.chunkBuffers[sender] = nil
-        self.receiveStatus[sender] = nil 
-        
+        self.receiveStatus[sender] = nil
+
         if completeMsg:sub(1, 1) == "C" then
             completeMsg = completeMsg:sub(2)
             local decoded = LibDeflate:DecodeForWoWAddonChannel(completeMsg)
             local decompressed = LibDeflate:DecompressDeflate(decoded)
             completeMsg = decompressed
         end
-        
+
         local messagePrefix = "WEAKAURA_UPDATE:"
-        local descPrefix    = "|DESC:"
+        local descPrefix = "|DESC:"
         local data, description = completeMsg:match("^" .. messagePrefix .. "(.*)" .. descPrefix .. "(.*)$")
         if data then
             local db = self:EnsureDB()
             db.pendingWeakAuraData = data
             self:ShowWeakAuraImportScreen(data, sender, description or "No Description")
-            
+
             DEFAULT_CHAT_FRAME:AddMessage(string.format("%sReceived WeakAura from %s (complete)", actPrefix, sender))
         end
     end
@@ -157,7 +167,7 @@ function WeakAuraUpdaterModule:CreateConfigPanel(parent)
     local importBoxFrame, importBoxEdit = UI:CreateMultilineEditBox(configPanel, 520, 200, "")
     importBoxFrame:SetPoint("TOPLEFT", importLabel, "BOTTOMLEFT", 0, -10)
     self.importBoxFrame = importBoxFrame
-    self.importBoxEdit  = importBoxEdit
+    self.importBoxEdit = importBoxEdit
 
     local sendButton = UI:CreateButton(configPanel, "Send", 120, 30)
     sendButton:SetPoint("TOPLEFT", importBoxFrame, "BOTTOMLEFT", 0, -10)

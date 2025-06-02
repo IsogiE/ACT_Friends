@@ -35,8 +35,8 @@ function ACT:OpenConfig()
     configFrame.border = CreateFrame("Frame", nil, configFrame, "BackdropTemplate")
     configFrame.border:SetAllPoints()
     configFrame.border:SetBackdrop({
-        edgeFile = "Interface\\AddOns\\ACT_Friends\\media\\border", 
-        edgeSize = 6,
+        edgeFile = "Interface\\AddOns\\ACT_Friends\\media\\border",
+        edgeSize = 6
     })
 
     local closeButton = CreateFrame("Button", nil, configFrame, "UIPanelCloseButton")
@@ -62,7 +62,7 @@ function ACT:OpenConfig()
         else
             return version:gsub("(%d)", "%1."):gsub("%.$", "")
         end
-    end    
+    end
 
     local vnum = C_AddOns.GetAddOnMetadata("ACT_Friends", "Version")
     local formatted_version = formatVersion(vnum)
@@ -82,11 +82,11 @@ function ACT:OpenConfig()
     local selectedButton = nil
     local yOffset = 0
     local firstModule = nil
-    local firstButton = nil  
+    local firstButton = nil
 
     for i, mod in ipairs(self.modules) do
         if i == 1 then
-            firstModule = mod 
+            firstModule = mod
         end
 
         local text = mod.title or ("Module " .. i)
@@ -107,7 +107,7 @@ function ACT:OpenConfig()
             self:SetBackdropColor(unpack(selectedColor))
             selectedButton = self
 
-            ACT.selectedModule = mod 
+            ACT.selectedModule = mod
             ACT:ShowModule(mod)
         end)
 
@@ -124,7 +124,7 @@ function ACT:OpenConfig()
         end)
 
         if i == 1 then
-            firstButton = btn 
+            firstButton = btn
         end
 
         yOffset = yOffset + 1
@@ -140,23 +140,25 @@ function ACT:OpenConfig()
         self:ShowModule(firstModule)
 
         if firstButton then
-            firstButton:SetBackdropColor(0.3, 0.6, 1, 1) 
+            firstButton:SetBackdropColor(0.3, 0.6, 1, 1)
             selectedButton = firstButton
         end
     end
 end
 
 function ACT:ShowModule(mod)
-    if not self.configFrame or not self.configFrame.content then return end
+    if not self.configFrame or not self.configFrame.content then
+        return
+    end
     local content = self.configFrame.content
 
-    for _, child in ipairs({ content:GetChildren() }) do
+    for _, child in ipairs({content:GetChildren()}) do
         child:Hide()
         child:SetParent(nil)
     end
 
-    self.configFrame:SetSize(800, 600) 
-    content:SetSize(560, 540)  
+    self.configFrame:SetSize(800, 600)
+    content:SetSize(560, 540)
 
     local width, height = mod:GetConfigSize()
     self.configFrame:SetSize(width, height)
@@ -176,13 +178,13 @@ function ACT:OnInitialize()
         profile = {
             nicknames = {},
             nicknamesWiped = false,
-            defaultNicknames = "", 
+            defaultNicknames = "",
             splits = {
                 profiles = {},
-                KeepPosInGroup = true,
+                KeepPosInGroup = true
             },
             useNicknameIntegration = true,
-            weakauraUpdater = {},
+            weakauraUpdater = {}
         }
     }, true)
 
@@ -199,7 +201,7 @@ function ACT:OnInitialize()
                 mod:ProcessImportString(importString)
             end
         end
-    end    
+    end
 end
 
 function ACT:OnEnable()
@@ -210,11 +212,15 @@ function ACT:OnEnable()
         icon = [[Interface\AddOns\ACT_Friends\media\MiniMap.tga]],
         OnClick = function(clickedframe, button)
             ACT:OpenConfig()
-        end,
+        end
     })
 
     local LDBIcon = LibStub("LibDBIcon-1.0")
-    if not ACTDB then ACTDB = {} end
-    if not ACTDB.minimap then ACTDB.minimap = {} end
+    if not ACTDB then
+        ACTDB = {}
+    end
+    if not ACTDB.minimap then
+        ACTDB.minimap = {}
+    end
     LDBIcon:Register("ACT", LDB, ACTDB.minimap)
 end

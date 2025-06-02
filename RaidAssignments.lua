@@ -1,19 +1,23 @@
-AssignmentModule = {} 
+AssignmentModule = {}
 AssignmentModule.rosterLoaded = false
-AssignmentModule.title = "Assignments"  
+AssignmentModule.title = "Assignments"
 
 VACT = VACT or {}
 VACT.BossPresets = VACT.BossPresets or {}
 
 function AssignmentModule:GetDisplayName(name)
-    if not name then return "" end
+    if not name then
+        return ""
+    end
     local trimmed = name:match("^%s*(.-)%s*$")
     local baseName = trimmed:match("^(.-)%-")
     return baseName or trimmed
 end
 
 function AssignmentModule:StripActiveRoster()
-    if not self.activeRoster then return end
+    if not self.activeRoster then
+        return
+    end
     for i, entry in ipairs(self.activeRoster) do
         if type(entry) == "table" and entry.name then
             entry.name = self:GetDisplayName(entry.name)
@@ -23,19 +27,19 @@ function AssignmentModule:StripActiveRoster()
     end
 end
 
-AssignmentModule.raids = AssignmentData or {} 
-AssignmentModule.activeRoster = {}  
+AssignmentModule.raids = AssignmentData or {}
+AssignmentModule.activeRoster = {}
 AssignmentModule.selectedRaid = nil
 AssignmentModule.selectedBoss = nil
 AssignmentModule.selectedPresetIndex = nil
-AssignmentModule.nameFrames = {} 
-AssignmentModule.currentSlots = nil 
+AssignmentModule.nameFrames = {}
+AssignmentModule.currentSlots = nil
 
 local function GetClassColor(classToken)
     local colors = CUSTOM_CLASS_COLORS or RAID_CLASS_COLORS
     if colors and classToken and colors[classToken] then
         local c = colors[classToken]
-        return { c.r, c.g, c.b, 1 }
+        return {c.r, c.g, c.b, 1}
     end
     return {1, 1, 1, 1}
 end
@@ -44,7 +48,8 @@ function GetPlayerClassColorByName(playerName)
     local currentRealm = GetRealmName()
     for _, entry in ipairs(AssignmentModule.activeRoster or {}) do
         if type(entry) == "table" and entry.name and entry.class then
-            if AssignmentModule:GetDisplayName(entry.name):lower() == AssignmentModule:GetDisplayName(playerName):lower() then
+            if AssignmentModule:GetDisplayName(entry.name):lower() ==
+                AssignmentModule:GetDisplayName(playerName):lower() then
                 return GetClassColor(entry.class)
             end
         end
@@ -99,18 +104,18 @@ local function CreateAssignmentSlot(parent, width, height)
     editBox:SetAllPoints(container)
     editBox:SetAutoFocus(false)
     editBox:SetFontObject("GameFontHighlightSmall")
-    editBox:SetText("")    
-    editBox.usedName = nil     
+    editBox:SetText("")
+    editBox.usedName = nil
     editBox:SetScript("OnEditFocusLost", function(self)
         local plain = self:GetText():gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
-        plain = plain:match("^%s*(.-)%s*$") or ""  
+        plain = plain:match("^%s*(.-)%s*$") or ""
         if plain == "" then
             self.usedName = nil
         else
             local filtered = AssignmentModule:GetDisplayName(plain)
             local color = GetPlayerClassColorByName(filtered)
             local r, g, b = color[1], color[2], color[3]
-            local hexColor = string.format("%02x%02x%02x", r*255, g*255, b*255)
+            local hexColor = string.format("%02x%02x%02x", r * 255, g * 255, b * 255)
             self:SetText("|cff" .. hexColor .. filtered .. "|r")
             self:SetCursorPosition(0)
             self.usedName = filtered
@@ -121,7 +126,9 @@ local function CreateAssignmentSlot(parent, width, height)
 end
 
 function AssignmentModule:UpdateRosterList()
-    if not self.nameListContent then return end
+    if not self.nameListContent then
+        return
+    end
     local allowDuplicates = self.allowDuplicates
     local used = {}
     if self.currentSlots and not allowDuplicates then
@@ -169,7 +176,7 @@ function AssignmentModule:UpdateRosterList()
             yOffset = yOffset - 22
         end
     end
-    for i = index+1, #self.nameFrames do
+    for i = index + 1, #self.nameFrames do
         self.nameFrames[i]:Hide()
     end
 
@@ -197,7 +204,7 @@ function AssignmentModule:UpdateRosterList()
         end
 
         local defaultR, defaultG, defaultB, defaultA = 0.1, 0.1, 0.1, 1
-        local badR, badG, badB, badA         = 1.0, 0.2, 0.2, 0.5
+        local badR, badG, badB, badA = 1.0, 0.2, 0.2, 0.5
 
         for _, group in ipairs(self.currentSlots) do
             for _, slot in ipairs(group) do
@@ -227,16 +234,19 @@ function AssignmentModule:CreateDraggableNameFrame(parent, playerName, classColo
     frame.nameText = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     frame.nameText:SetPoint("CENTER")
     frame.nameText:SetText(self:GetDisplayName(playerName))
-    frame.nameText:SetTextColor(unpack(classColor or {1,1,1,1}))
-    frame.classColor = classColor or {1,1,1,1}
+    frame.nameText:SetTextColor(unpack(classColor or {1, 1, 1, 1}))
+    frame.classColor = classColor or {1, 1, 1, 1}
     frame.playerName = playerName
     frame.originalParent = parent
     frame.originalPoint, frame.originalRelPoint = nil, nil
     frame.originalX, frame.originalY = nil, nil
     frame:SetScript("OnMouseDown", function(self, button)
         if button == "LeftButton" then
-            if ClearAllEditFocus then ClearAllEditFocus() end 
-            AssignmentModule.DragContainer = AssignmentModule.DragContainer or CreateFrame("Frame", "Assignment_DragContainer", UIParent)
+            if ClearAllEditFocus then
+                ClearAllEditFocus()
+            end
+            AssignmentModule.DragContainer = AssignmentModule.DragContainer or
+                                                 CreateFrame("Frame", "Assignment_DragContainer", UIParent)
             local dragLayer = AssignmentModule.DragContainer
             dragLayer:SetAllPoints(UIParent)
             dragLayer:SetFrameStrata("HIGH")
@@ -258,13 +268,13 @@ function AssignmentModule:CreateDraggableNameFrame(parent, playerName, classColo
                             if editBox:GetLeft() and editBox:GetRight() then
                                 local cx, cy = GetCursorPosition()
                                 local scale = editBox:GetEffectiveScale()
-                                cx, cy = cx/scale, cy/scale
+                                cx, cy = cx / scale, cy / scale
                                 local left, right = editBox:GetLeft(), editBox:GetRight()
                                 local top, bottom = editBox:GetTop(), editBox:GetBottom()
                                 if cx >= left - 15 and cx <= right + 15 and cy >= bottom - 8 and cy <= top + 8 then
                                     local name = AssignmentModule:GetDisplayName(self.playerName) or ""
-                                    local r, g, b = unpack(self.classColor or {1,1,1,1})
-                                    local hexColor = string.format("%02x%02x%02x", r*255, g*255, b*255)
+                                    local r, g, b = unpack(self.classColor or {1, 1, 1, 1})
+                                    local hexColor = string.format("%02x%02x%02x", r * 255, g * 255, b * 255)
                                     editBox:SetText("|cff" .. hexColor .. name .. "|r")
                                     editBox:SetJustifyH("LEFT")
                                     editBox:SetCursorPosition(0)
@@ -276,16 +286,19 @@ function AssignmentModule:CreateDraggableNameFrame(parent, playerName, classColo
                             end
                         end
                     end
-                    if dropped then break end
+                    if dropped then
+                        break
+                    end
                 end
             end
             if not dropped then
                 if self.originalPoint and self.originalRelPoint then
                     self:SetParent(self.originalParent or parent)
                     self:ClearAllPoints()
-                    self:SetPoint(self.originalPoint, self.originalParent or parent, self.originalRelPoint, self.originalX or 0, self.originalY or 0)
+                    self:SetPoint(self.originalPoint, self.originalParent or parent, self.originalRelPoint,
+                        self.originalX or 0, self.originalY or 0)
                 end
-                self:Show() 
+                self:Show()
             else
                 AssignmentModule:UpdateRosterList()
             end
@@ -296,12 +309,12 @@ end
 
 function AssignmentModule:LoadBossUI(bossId)
     if self.bossFrame then
-        for _, child in ipairs({ self.bossFrame:GetChildren() }) do
+        for _, child in ipairs({self.bossFrame:GetChildren()}) do
             child:Hide()
             child:SetParent(nil)
         end
     end
-    self.currentSlots = nil  
+    self.currentSlots = nil
     self.selectedBoss = bossId
     if AssignmentBossUI and AssignmentBossUI[bossId] then
         AssignmentBossUI[bossId](self.bossFrame, self.activeRoster)
@@ -317,14 +330,14 @@ function AssignmentModule:LoadBossUI(bossId)
                             local filtered = AssignmentModule:GetDisplayName(plain)
                             local color = GetPlayerClassColorByName(filtered)
                             local r, g, b = color[1], color[2], color[3]
-                            local hexColor = string.format("%02x%02x%02x", r*255, g*255, b*255)
+                            local hexColor = string.format("%02x%02x%02x", r * 255, g * 255, b * 255)
                             self:SetText("|cff" .. hexColor .. filtered .. "|r")
                             self:SetCursorPosition(0)
                             self.usedName = filtered
                         end
                         AssignmentModule:UpdateRosterList()
                     end)
-                    
+
                     editBox:EnableMouse(true)
                     editBox:RegisterForDrag("LeftButton")
                     editBox:SetScript("OnDragStart", function(self)
@@ -338,7 +351,9 @@ function AssignmentModule:LoadBossUI(bossId)
                                         self.isDragging = true
                                         self:SetScript("OnUpdate", nil)
                                         if self.usedName and self.usedName ~= "" then
-                                            AssignmentModule.DragContainer = AssignmentModule.DragContainer or CreateFrame("Frame", "Assignment_DragContainer", UIParent)
+                                            AssignmentModule.DragContainer =
+                                                AssignmentModule.DragContainer or
+                                                    CreateFrame("Frame", "Assignment_DragContainer", UIParent)
                                             local dragLayer = AssignmentModule.DragContainer
                                             dragLayer:SetAllPoints(UIParent)
                                             dragLayer:SetFrameStrata("HIGH")
@@ -351,8 +366,9 @@ function AssignmentModule:LoadBossUI(bossId)
                                                 edgeFile = "Interface\\Buttons\\WHITE8x8",
                                                 edgeSize = 1
                                             })
-                                            dragFrame:SetBackdropBorderColor(1,1,1,1)
-                                            dragFrame.text = dragFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+                                            dragFrame:SetBackdropBorderColor(1, 1, 1, 1)
+                                            dragFrame.text =
+                                                dragFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
                                             dragFrame.text:SetPoint("CENTER")
                                             dragFrame.text:SetText(self.usedName)
                                             dragFrame:EnableMouse(false)
@@ -360,7 +376,7 @@ function AssignmentModule:LoadBossUI(bossId)
                                                 local cx, cy = GetCursorPosition()
                                                 local scale = UIParent:GetEffectiveScale()
                                                 frame:ClearAllPoints()
-                                                frame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", cx/scale, cy/scale)
+                                                frame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", cx / scale, cy / scale)
                                             end)
                                             self.dragFrame = dragFrame
                                         end
@@ -375,7 +391,9 @@ function AssignmentModule:LoadBossUI(bossId)
                                     self.isDragging = true
                                     self:SetScript("OnUpdate", nil)
                                     if self.usedName and self.usedName ~= "" then
-                                        AssignmentModule.DragContainer = AssignmentModule.DragContainer or CreateFrame("Frame", "Assignment_DragContainer", UIParent)
+                                        AssignmentModule.DragContainer =
+                                            AssignmentModule.DragContainer or
+                                                CreateFrame("Frame", "Assignment_DragContainer", UIParent)
                                         local dragLayer = AssignmentModule.DragContainer
                                         dragLayer:SetAllPoints(UIParent)
                                         dragLayer:SetFrameStrata("HIGH")
@@ -388,7 +406,7 @@ function AssignmentModule:LoadBossUI(bossId)
                                             edgeFile = "Interface\\Buttons\\WHITE8x8",
                                             edgeSize = 1
                                         })
-                                        dragFrame:SetBackdropBorderColor(1,1,1,1)
+                                        dragFrame:SetBackdropBorderColor(1, 1, 1, 1)
                                         dragFrame.text = dragFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
                                         dragFrame.text:SetPoint("CENTER")
                                         dragFrame.text:SetText(self.usedName)
@@ -397,7 +415,7 @@ function AssignmentModule:LoadBossUI(bossId)
                                             local cx, cy = GetCursorPosition()
                                             local scale = UIParent:GetEffectiveScale()
                                             frame:ClearAllPoints()
-                                            frame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", cx/scale, cy/scale)
+                                            frame:SetPoint("CENTER", UIParent, "BOTTOMLEFT", cx / scale, cy / scale)
                                         end)
                                         self.dragFrame = dragFrame
                                     end
@@ -419,20 +437,28 @@ function AssignmentModule:LoadBossUI(bossId)
                                         break
                                     end
                                 end
-                                if dropTarget then break end
+                                if dropTarget then
+                                    break
+                                end
                             end
                             local sourceEditBox = self
-                            local sourceText = sourceEditBox.usedName or (sourceEditBox:GetText():gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))
+                            local sourceText = sourceEditBox.usedName or
+                                                   (sourceEditBox:GetText():gsub("|c%x%x%x%x%x%x%x%x", "")
+                                    :gsub("|r", ""))
                             sourceText = AssignmentModule:GetDisplayName(sourceText)
                             if dropTarget then
                                 if dropTarget ~= sourceEditBox then
-                                    local targetText = dropTarget.usedName or (dropTarget:GetText():gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))
+                                    local targetText = dropTarget.usedName or
+                                                           (dropTarget:GetText():gsub("|c%x%x%x%x%x%x%x%x", "")
+                                            :gsub("|r", ""))
                                     targetText = AssignmentModule:GetDisplayName(targetText)
                                     if targetText and targetText ~= "" then
-                                        local sourceColor = GetPlayerClassColorByName(sourceText) or {1,1,1,1}
-                                        local targetColor = GetPlayerClassColorByName(targetText) or {1,1,1,1}
-                                        local sourceHex = string.format("%02x%02x%02x", sourceColor[1]*255, sourceColor[2]*255, sourceColor[3]*255)
-                                        local targetHex = string.format("%02x%02x%02x", targetColor[1]*255, targetColor[2]*255, targetColor[3]*255)
+                                        local sourceColor = GetPlayerClassColorByName(sourceText) or {1, 1, 1, 1}
+                                        local targetColor = GetPlayerClassColorByName(targetText) or {1, 1, 1, 1}
+                                        local sourceHex = string.format("%02x%02x%02x", sourceColor[1] * 255,
+                                            sourceColor[2] * 255, sourceColor[3] * 255)
+                                        local targetHex = string.format("%02x%02x%02x", targetColor[1] * 255,
+                                            targetColor[2] * 255, targetColor[3] * 255)
                                         sourceEditBox:SetText("|cff" .. targetHex .. targetText .. "|r")
                                         sourceEditBox:SetJustifyH("LEFT")
                                         sourceEditBox:SetCursorPosition(0)
@@ -442,8 +468,9 @@ function AssignmentModule:LoadBossUI(bossId)
                                         dropTarget:SetCursorPosition(0)
                                         dropTarget.usedName = sourceText
                                     else
-                                        local sourceColor = GetPlayerClassColorByName(sourceText) or {1,1,1,1}
-                                        local sourceHex = string.format("%02x%02x%02x", sourceColor[1]*255, sourceColor[2]*255, sourceColor[3]*255)
+                                        local sourceColor = GetPlayerClassColorByName(sourceText) or {1, 1, 1, 1}
+                                        local sourceHex = string.format("%02x%02x%02x", sourceColor[1] * 255,
+                                            sourceColor[2] * 255, sourceColor[3] * 255)
                                         dropTarget:SetText("|cff" .. sourceHex .. sourceText .. "|r")
                                         dropTarget:SetJustifyH("LEFT")
                                         dropTarget:SetCursorPosition(0)
@@ -455,7 +482,8 @@ function AssignmentModule:LoadBossUI(bossId)
                                     end
                                 end
                             else
-                                if AssignmentModule.nameListContent and IsCursorInFrame(AssignmentModule.nameListContent) then
+                                if AssignmentModule.nameListContent and
+                                    IsCursorInFrame(AssignmentModule.nameListContent) then
                                     sourceEditBox:SetText("")
                                     sourceEditBox:SetJustifyH("LEFT")
                                     sourceEditBox:SetCursorPosition(0)
@@ -466,7 +494,9 @@ function AssignmentModule:LoadBossUI(bossId)
                                     if plain ~= "" then
                                         local color = GetPlayerClassColorByName(plain)
                                         if color then
-                                            local hexColor = string.format("%02x%02x%02x", color[1]*255, color[2]*255, color[3]*255)
+                                            local hexColor =
+                                                string.format("%02x%02x%02x", color[1] * 255, color[2] * 255,
+                                                    color[3] * 255)
                                             sourceEditBox:SetText("|cff" .. hexColor .. plain .. "|r")
                                         else
                                             sourceEditBox:SetText(plain)
@@ -489,7 +519,7 @@ function AssignmentModule:LoadBossUI(bossId)
 end
 
 function AssignmentModule:GetConfigSize()
-    return 1200, 600  
+    return 1200, 600
 end
 
 function AssignmentModule:CreateConfigPanel(parent)
@@ -536,13 +566,16 @@ function AssignmentModule:CreateConfigPanel(parent)
             for i = 1, numRaid do
                 local name, _, _, _, _, class = GetRaidRosterInfo(i)
                 if name then
-                    table.insert(rosterList, { name = name, class = class })
+                    table.insert(rosterList, {
+                        name = name,
+                        class = class
+                    })
                 end
             end
         end
         AssignmentModule.activeRoster = rosterList
         AssignmentModule:StripActiveRoster()
-        AssignmentModule.rosterLoaded = true 
+        AssignmentModule.rosterLoaded = true
         AssignmentModule:UpdateRosterList()
     end)
 
@@ -554,14 +587,16 @@ function AssignmentModule:CreateConfigPanel(parent)
             AssignmentModule.presetsDropdown.button.text:SetText("Roster Preset")
         end
         AssignmentModule.activeRoster = {}
-        AssignmentModule.rosterLoaded  = false
+        AssignmentModule.rosterLoaded = false
         AssignmentModule:UpdateRosterList()
     end)
 
     local applyButton = UI:CreateButton(configPanel, "Apply Roster", 120, 30)
     applyButton:SetPoint("LEFT", grabButton, "RIGHT", 20, 0)
     applyButton:SetScript("OnClick", function()
-        if not AssignmentModule.selectedPresetIndex then return end
+        if not AssignmentModule.selectedPresetIndex then
+            return
+        end
         local preset = AssignmentModule.Presets[AssignmentModule.selectedPresetIndex]
         if preset and preset.data then
             local rosterList = {}
@@ -575,16 +610,16 @@ function AssignmentModule:CreateConfigPanel(parent)
             end
             AssignmentModule.activeRoster = rosterList
             AssignmentModule:StripActiveRoster()
-            AssignmentModule.rosterLoaded = true  
+            AssignmentModule.rosterLoaded = true
             AssignmentModule:UpdateRosterList()
         end
     end)
 
     local rosterFrame = CreateFrame("Frame", nil, configPanel)
-    rosterFrame:SetSize(220, 460) 
+    rosterFrame:SetSize(220, 460)
     rosterFrame:SetPoint("TOPLEFT", configPanel, "TOPLEFT", 20, -80)
     local listScroll = CreateFrame("ScrollFrame", nil, rosterFrame, "UIPanelScrollFrameTemplate")
-    listScroll:SetSize(210, 420)  
+    listScroll:SetSize(210, 420)
     listScroll:SetPoint("TOPLEFT", rosterFrame, "TOPLEFT", 0, 0)
     local listContent = CreateFrame("Frame", nil, listScroll)
     listContent:SetSize(210, 420)
@@ -617,13 +652,13 @@ function AssignmentModule:CreateConfigPanel(parent)
                 end
                 UI:SetDropdownOptions(bossDropdown, bossOptions)
                 bossDropdown.button.text:SetText("Select Boss")
-                AssignmentModule:LoadBossUI(nil) 
+                AssignmentModule:LoadBossUI(nil)
             end
         })
     end
     UI:SetDropdownOptions(raidDropdown, raidOptions)
     if #raidOptions > 0 then
-        raidOptions[1].onClick() 
+        raidOptions[1].onClick()
     end
 
     self.Presets = VACT.RaidGroupsPresets or {}

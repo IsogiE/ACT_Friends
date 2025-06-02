@@ -4,7 +4,7 @@ NicknameModule.title = "Nicknames"
 local AceComm = LibStub("AceComm-3.0")
 local LibDeflate = LibStub("LibDeflate")
 
-local PUSH_PREFIX = "ACTF_NICK_UPPY" 
+local PUSH_PREFIX = "ACTF_NICK_UPPY"
 local KILL_PREFIX = "ACTF_NUKE"
 local CMP_PREFIX = "ACTF_NCMP"
 
@@ -58,11 +58,15 @@ function NicknameModule:CleanupEmptyNicknames()
 end
 
 AceComm:RegisterComm(PUSH_PREFIX, function(prefix, message, distribution, sender)
-    if prefix ~= PUSH_PREFIX then return end
+    if prefix ~= PUSH_PREFIX then
+        return
+    end
 
-    local decoded      = LibDeflate:DecodeForPrint(message)
+    local decoded = LibDeflate:DecodeForPrint(message)
     local decompressed = LibDeflate:DecompressDeflate(decoded)
-    if not decompressed then return end
+    if not decompressed then
+        return
+    end
 
     if decompressed == (ACT.db.profile.defaultNicknames or "") then
         return
@@ -83,14 +87,11 @@ AceComm:RegisterComm(KILL_PREFIX, function(prefix, message, distribution, sender
         NicknameModule:RefreshContent()
         SyncCell()
         if not NicknameModule.killswitchPopup then
-            NicknameModule.killswitchPopup = UI:CreateTextPopup(
-                "Killswitch Activated",
-                sender .. " has triggered a killswitch! Please reload your UI.",
-                "Reload Now",
-                "Later",
-                function() ReloadUI() end,
-                function() end
-            )
+            NicknameModule.killswitchPopup = UI:CreateTextPopup("Killswitch Activated", sender ..
+                " has triggered a killswitch! Please reload your UI.", "Reload Now", "Later", function()
+                ReloadUI()
+            end, function()
+            end)
             NicknameModule.killswitchPopup:SetScript("OnHide", function()
                 NicknameModule.killswitchPopup = nil
             end)
@@ -135,7 +136,8 @@ end
 
 local function IsPrivilegedUser()
     local battleTag = GetPlayerBattleTag()
-    return (battleTag == "Isogi#21124" or battleTag == "Jafar#21190" or battleTag == "ViklunD#2904" or battleTag == "Strike#2545" or battleTag == "Brokenlenny#2577")
+    return (battleTag == "Isogi#21124" or battleTag == "Jafar#21190" or battleTag == "ViklunD#2904" or battleTag ==
+               "Strike#2545" or battleTag == "Brokenlenny#2577")
 end
 
 function NicknameModule:MergePushUpdate(defaultString)
@@ -147,7 +149,10 @@ function NicknameModule:MergePushUpdate(defaultString)
             if nickname and characters then
                 nickname = strtrim(nickname)
                 local normalizedNick = nickname:lower()
-                newEntries[normalizedNick] = { originalCase = nickname, characters = {} }
+                newEntries[normalizedNick] = {
+                    originalCase = nickname,
+                    characters = {}
+                }
                 for charName in string.gmatch(characters, "[^,]+") do
                     charName = strtrim(charName)
                     if charName ~= "" then
@@ -178,18 +183,16 @@ function NicknameModule:MergePushUpdate(defaultString)
         end
     end
     for normNick, newData in pairs(newEntries) do
-        existing[newData.originalCase] = { characters = newData.characters }
+        existing[newData.originalCase] = {
+            characters = newData.characters
+        }
     end
 end
 
 function NicknameModule:ConfirmPushDefault()
     if not self.pushDefaultPopup then
-        self.pushDefaultPopup = UI:CreateTextPopup(
-            "Confirm Push Default",
-            "Are you sure you want to push default nicknames?",
-            "Confirm",
-            "Cancel",
-            function()
+        self.pushDefaultPopup = UI:CreateTextPopup("Confirm Push Default",
+            "Are you sure you want to push default nicknames?", "Confirm", "Cancel", function()
                 self.pushDefaultPopup:Hide()
                 if ACT.db.profile.defaultNicknames and ACT.db.profile.defaultNicknames ~= "" then
                     local compressed = LibDeflate:CompressDeflate(ACT.db.profile.defaultNicknames)
@@ -200,8 +203,7 @@ function NicknameModule:ConfirmPushDefault()
                     NicknameModule:RefreshContent()
                     SyncCell()
                 end
-            end,
-            function()
+            end, function()
                 self.pushDefaultPopup:Hide()
             end)
         self.pushDefaultPopup:SetScript("OnHide", function()
@@ -222,15 +224,17 @@ function NicknameModule:GetConfigSize()
 end
 
 function NormalizeString(str)
-    if not str or str == "" then return str end
+    if not str or str == "" then
+        return str
+    end
     local pos = 1
     local byteVal = str:byte(pos)
     local charLen = 1
-    if byteVal >= 0xF0 then  
+    if byteVal >= 0xF0 then
         charLen = 4
-    elseif byteVal >= 0xE0 then  
+    elseif byteVal >= 0xE0 then
         charLen = 3
-    elseif byteVal >= 0xC0 then  
+    elseif byteVal >= 0xC0 then
         charLen = 2
     end
     local firstChar = str:sub(1, charLen)
@@ -249,16 +253,16 @@ function NicknameModule:CreateConfigPanel(parent)
     local configPanel = CreateFrame("Frame", nil, parent)
     configPanel:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, 0)
     configPanel:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
-    
+
     local importLabel = configPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     importLabel:SetPoint("TOPLEFT", configPanel, "TOPLEFT", 20, 16)
     importLabel:SetText("Nicknames")
-    
+
     local importBoxFrame, importBoxEdit = UI:CreateMultilineEditBox(configPanel, 520, 40, nil)
     importBoxFrame:SetPoint("TOPLEFT", importLabel, "BOTTOMLEFT", 0, -10)
     self.importBoxFrame = importBoxFrame
     self.importBoxEdit = importBoxEdit
-    
+
     local importButton = UI:CreateButton(configPanel, "Import", 120, 30, function()
         local text = self.importBoxEdit:GetText()
         self.importErrorMsg:SetText("")
@@ -285,7 +289,9 @@ function NicknameModule:CreateConfigPanel(parent)
             local conflict = self:CheckImportConflicts(text)
             if conflict then
                 self.importErrorMsg:SetText("This character already has a nickname associated with it")
-                C_Timer.After(3, function() self.importErrorMsg:SetText("") end)
+                C_Timer.After(3, function()
+                    self.importErrorMsg:SetText("")
+                end)
                 return
             end
             self:ProcessImportString(text)
@@ -296,12 +302,12 @@ function NicknameModule:CreateConfigPanel(parent)
         end
     end)
     importButton:SetPoint("TOPLEFT", importBoxFrame, "BOTTOMLEFT", 0, -10)
-    
+
     local errorMsg = configPanel:CreateFontString(nil, "OVERLAY", "GameFontRed")
     errorMsg:SetPoint("TOPLEFT", importButton, "BOTTOMLEFT", 0, -5)
     errorMsg:SetText("")
     self.importErrorMsg = errorMsg
-    
+
     local integrationCheckbox = CreateFrame("CheckButton", nil, configPanel, "UICheckButtonTemplate")
     integrationCheckbox:SetPoint("LEFT", importButton, "RIGHT", 20, 0)
     integrationCheckbox:SetSize(22, 22)
@@ -321,23 +327,23 @@ function NicknameModule:CreateConfigPanel(parent)
         SyncCell()
         NicknameModule:PromptReloadNormal()
     end)
-    
+
     local headerFrame = CreateFrame("Frame", nil, configPanel)
     headerFrame:SetSize(520, 20)
     headerFrame:SetPoint("TOPLEFT", importButton, "BOTTOMLEFT", 0, -30)
-    
+
     local nicknameHeader = headerFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     nicknameHeader:SetPoint("LEFT", headerFrame, "LEFT", 0, -10)
     nicknameHeader:SetText("Nickname")
-    
+
     local charHeader = headerFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     charHeader:SetPoint("LEFT", headerFrame, "LEFT", 113, -10)
     charHeader:SetText("Character Names")
-    
+
     local actionsHeader = headerFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     actionsHeader:SetPoint("LEFT", headerFrame, "LEFT", 350, -10)
     actionsHeader:SetText("Actions")
-    
+
     local scrollFrame = CreateFrame("ScrollFrame", nil, configPanel, "UIPanelScrollFrameTemplate")
     scrollFrame:SetSize(520, 320)
     scrollFrame:SetPoint("TOPLEFT", headerFrame, "BOTTOMLEFT", 0, -10)
@@ -355,37 +361,37 @@ function NicknameModule:CreateConfigPanel(parent)
     scrollChild:SetSize(520, 320)
     scrollFrame:SetScrollChild(scrollChild)
     self.scrollChild = scrollChild
-    
+
     local defaultButton = UI:CreateButton(configPanel, "Default Nicknames", 120, 30, function()
         NicknameModule:ShowWipeCustomPopup()
     end)
     defaultButton:SetPoint("TOPLEFT", scrollFrame, "BOTTOMLEFT", 0, -15)
-    
+
     local nickStringButton = UI:CreateButton(configPanel, "Nickname String", 120, 30, function()
         NicknameModule:ShowNicknameStringPopup()
     end)
     nickStringButton:SetPoint("LEFT", defaultButton, "RIGHT", 10, 0)
-    
+
     if IsPrivilegedUser() then
         local officerFrame = CreateFrame("Frame", "OfficerToolsFrame", configPanel, "BackdropTemplate")
         officerFrame:SetSize(165, 235)
         officerFrame:SetPoint("TOPLEFT", configPanel, "TOPRIGHT", -213, 40)
-        
+
         officerFrame.bg = officerFrame:CreateTexture(nil, "BACKGROUND")
         officerFrame.bg:SetAllPoints()
         officerFrame.bg:SetColorTexture(0.1, 0.1, 0.1, 0.9)
-        
+
         officerFrame.border = CreateFrame("Frame", nil, officerFrame, "BackdropTemplate")
         officerFrame.border:SetAllPoints()
         officerFrame.border:SetBackdrop({
             edgeFile = "Interface\\AddOns\\ACT\\media\\border",
-            edgeSize = 8,
+            edgeSize = 8
         })
-        
+
         local title = officerFrame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         title:SetPoint("TOP", officerFrame, "TOP", 0, -10)
         title:SetText("OFFICER TOOLS")
-        
+
         local btnHeight = 30
         local btnSpacing = 5
         local currentY = -40
@@ -394,20 +400,30 @@ function NicknameModule:CreateConfigPanel(parent)
             btn:SetPoint("TOP", officerFrame, "TOP", 0, currentY)
             currentY = currentY - (btnHeight + btnSpacing)
         end
-        
-        CreateOfficerButton("Set Default", function() SlashCmdList["SETDEFAULTNICK"]("") end)
-        CreateOfficerButton("Compare Defaults", function() NicknameModule:CompareDefaultNicknames() end)
-        CreateOfficerButton("Push Default", function() NicknameModule:ConfirmPushDefault() end)
-        CreateOfficerButton("Nuke Local Nicknames", function() SlashCmdList["WIPENICKNAMES"]("") end)
-        CreateOfficerButton("Nuke ALL Nicknames", function() SlashCmdList["ACTKILLSWITCH"]("") end)
-        
+
+        CreateOfficerButton("Set Default", function()
+            SlashCmdList["SETDEFAULTNICK"]("")
+        end)
+        CreateOfficerButton("Compare Defaults", function()
+            NicknameModule:CompareDefaultNicknames()
+        end)
+        CreateOfficerButton("Push Default", function()
+            NicknameModule:ConfirmPushDefault()
+        end)
+        CreateOfficerButton("Nuke Local Nicknames", function()
+            SlashCmdList["WIPENICKNAMES"]("")
+        end)
+        CreateOfficerButton("Nuke ALL Nicknames", function()
+            SlashCmdList["ACTKILLSWITCH"]("")
+        end)
+
         self.officerFrame = officerFrame
-    end    
-    
+    end
+
     self.configPanel = configPanel
     NicknameModule:NormalizeStoredNames()
     self:RefreshContent()
-    
+
     return configPanel
 end
 
@@ -484,19 +500,25 @@ function NicknameModule:NormalizeStoredNames()
                 else
                     charName = NormalizeString(charData)
                 end
-                table.insert(newChars, { character = charName })
+                table.insert(newChars, {
+                    character = charName
+                })
             end
         end
-        newMap[normNick] = { characters = newChars }
+        newMap[normNick] = {
+            characters = newChars
+        }
     end
     ACT.db.profile.nicknames = newMap
 end
 
 function NicknameModule:RefreshContent()
     self:CleanupEmptyNicknames()
-    
-    if not self.scrollChild then return end
-    for _, child in ipairs({ self.scrollChild:GetChildren() }) do
+
+    if not self.scrollChild then
+        return
+    end
+    for _, child in ipairs({self.scrollChild:GetChildren()}) do
         child:Hide()
         child:SetParent(nil)
     end
@@ -518,17 +540,17 @@ function NicknameModule:RefreshContent()
         row:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8x8",
             edgeFile = "Interface\\Buttons\\WHITE8x8",
-            edgeSize = 1,
+            edgeSize = 1
         })
         row:SetBackdropColor(0.15, 0.15, 0.15, 1)
         row:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
-        
+
         local label = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         label:SetPoint("LEFT", row, "LEFT", 5, 0)
         label:SetSize(150, 30)
         label:SetJustifyH("LEFT")
         label:SetText(nickname)
-        
+
         local dropdown = UI:CreateDropdown(row, 200, 30)
         dropdown:SetPoint("LEFT", row, "LEFT", 110, 0)
         table.insert(self.dropdowns, dropdown)
@@ -547,12 +569,12 @@ function NicknameModule:RefreshContent()
         UI:SetDropdownOptions(dropdown, options)
         dropdown.button.text:SetText("Select Character")
         dropdown.selectedValue = nil
-        
+
         local actionsFrame = CreateFrame("Frame", nil, row)
         actionsFrame:SetSize(170, 30)
         actionsFrame:SetPoint("LEFT", row, "LEFT", 330, 0)
         actionsFrame:SetPoint("CENTER", row, "CENTER", 0, 0)
-        
+
         local addBtn = UI:CreateButton(actionsFrame, "Add", 50, 20, function()
             if NicknameModule.characterInputPopup then
                 NicknameModule.characterInputPopup:Hide()
@@ -561,17 +583,17 @@ function NicknameModule:RefreshContent()
             end
             local title = "Add New Character"
             local defaultText = ""
-            NicknameModule.characterInputPopup, NicknameModule.characterInputEditBox = UI:CreatePopupWithEditBox(
-                title,
-                300,
-                200,
-                defaultText,
-                function(text)
+            NicknameModule.characterInputPopup, NicknameModule.characterInputEditBox =
+                UI:CreatePopupWithEditBox(title, 300, 200, defaultText, function(text)
                     if text and text ~= "" then
                         if not ACT.db.profile.nicknames[nickname] then
-                            ACT.db.profile.nicknames[nickname] = { characters = {} }
+                            ACT.db.profile.nicknames[nickname] = {
+                                characters = {}
+                            }
                         end
-                        table.insert(ACT.db.profile.nicknames[nickname].characters, { character = text })
+                        table.insert(ACT.db.profile.nicknames[nickname].characters, {
+                            character = text
+                        })
                         NicknameModule:CleanupEmptyNicknames()
                         NicknameModule:RefreshContent()
                         SyncCell()
@@ -580,13 +602,11 @@ function NicknameModule:RefreshContent()
                     if NicknameModule.characterInputPopup then
                         NicknameModule.characterInputPopup:Hide()
                     end
-                end,
-                function()
+                end, function()
                     if NicknameModule.characterInputPopup then
                         NicknameModule.characterInputPopup:Hide()
                     end
-                end
-            )
+                end)
             NicknameModule.characterInputPopup:SetScript("OnHide", function()
                 NicknameModule.characterInputPopup = nil
                 NicknameModule.characterInputEditBox = nil
@@ -594,12 +614,14 @@ function NicknameModule:RefreshContent()
             NicknameModule.characterInputPopup:Show()
         end)
         addBtn:SetPoint("LEFT", actionsFrame, "LEFT", 20, 0)
-        
+
         local editBtn = UI:CreateButton(actionsFrame, "Edit", 50, 20, function()
             if dropdown.selectedValue then
                 if isDefaultCharacter(nickname, dropdown.selectedValue) then
                     self.importErrorMsg:SetText("Error: Cannot edit Default Characters")
-                    C_Timer.After(3, function() self.importErrorMsg:SetText("") end)
+                    C_Timer.After(3, function()
+                        self.importErrorMsg:SetText("")
+                    end)
                     return
                 end
                 if NicknameModule.characterInputPopup then
@@ -610,11 +632,7 @@ function NicknameModule:RefreshContent()
                 local title = "Edit Character"
                 local defaultText = dropdown.selectedValue
                 NicknameModule.characterInputPopup, NicknameModule.characterInputEditBox = UI:CreatePopupWithEditBox(
-                    title,
-                    300,
-                    200,
-                    defaultText,
-                    function(text)
+                    title, 300, 200, defaultText, function(text)
                         if text and text ~= "" then
                             if ACT.db.profile.nicknames[nickname] and ACT.db.profile.nicknames[nickname].characters then
                                 for i, charData in ipairs(ACT.db.profile.nicknames[nickname].characters) do
@@ -638,13 +656,11 @@ function NicknameModule:RefreshContent()
                         if NicknameModule.characterInputPopup then
                             NicknameModule.characterInputPopup:Hide()
                         end
-                    end,
-                    function()
+                    end, function()
                         if NicknameModule.characterInputPopup then
                             NicknameModule.characterInputPopup:Hide()
                         end
-                    end
-                )
+                    end)
                 NicknameModule.characterInputPopup:SetScript("OnHide", function()
                     NicknameModule.characterInputPopup = nil
                     NicknameModule.characterInputEditBox = nil
@@ -653,12 +669,14 @@ function NicknameModule:RefreshContent()
             end
         end)
         editBtn:SetPoint("LEFT", addBtn, "RIGHT", 5, 0)
-        
+
         local deleteBtn = UI:CreateButton(actionsFrame, "Delete", 50, 20, function()
             if dropdown.selectedValue then
                 if isDefaultCharacter(nickname, dropdown.selectedValue) then
                     self.importErrorMsg:SetText("Error: Cannot delete Default Characters")
-                    C_Timer.After(3, function() self.importErrorMsg:SetText("") end)
+                    C_Timer.After(3, function()
+                        self.importErrorMsg:SetText("")
+                    end)
                     return
                 end
                 if ACT.db.profile.nicknames[nickname] and ACT.db.profile.nicknames[nickname].characters then
@@ -678,7 +696,7 @@ function NicknameModule:RefreshContent()
             end
         end)
         deleteBtn:SetPoint("LEFT", editBtn, "RIGHT", 5, 0)
-        
+
         yOffset = yOffset - 40
     end
 end
@@ -686,11 +704,14 @@ end
 function NicknameModule:ProcessImportString(importString)
     local nicknamesMap = ACT.db.profile.nicknames
     local normalizedMap = {}
-    
+
     for nickname, data in pairs(nicknamesMap) do
         local normalizedNick = nickname:lower()
         if not normalizedMap[normalizedNick] then
-            normalizedMap[normalizedNick] = { originalCase = nickname, characters = {} }
+            normalizedMap[normalizedNick] = {
+                originalCase = nickname,
+                characters = {}
+            }
         end
         if data.characters then
             for _, v in ipairs(data.characters) do
@@ -705,13 +726,15 @@ function NicknameModule:ProcessImportString(importString)
                         end
                     end
                     if not exists then
-                        table.insert(normalizedMap[normalizedNick].characters, { character = name })
+                        table.insert(normalizedMap[normalizedNick].characters, {
+                            character = name
+                        })
                     end
                 end
             end
         end
     end
-    
+
     for entry in string.gmatch(importString, "[^;]+") do
         entry = strtrim(entry)
         if entry ~= "" then
@@ -720,7 +743,10 @@ function NicknameModule:ProcessImportString(importString)
                 nickname = strtrim(nickname)
                 local normalizedNick = nickname:lower()
                 if not normalizedMap[normalizedNick] then
-                    normalizedMap[normalizedNick] = { originalCase = nickname, characters = {} }
+                    normalizedMap[normalizedNick] = {
+                        originalCase = nickname,
+                        characters = {}
+                    }
                 end
                 for charName in string.gmatch(characters, "[^,]+") do
                     charName = strtrim(charName)
@@ -734,7 +760,9 @@ function NicknameModule:ProcessImportString(importString)
                             end
                         end
                         if not exists then
-                            table.insert(normalizedMap[normalizedNick].characters, { character = charName })
+                            table.insert(normalizedMap[normalizedNick].characters, {
+                                character = charName
+                            })
                         end
                     end
                 end
@@ -744,7 +772,9 @@ function NicknameModule:ProcessImportString(importString)
 
     wipe(nicknamesMap)
     for _, data in pairs(normalizedMap) do
-        nicknamesMap[data.originalCase] = { characters = data.characters }
+        nicknamesMap[data.originalCase] = {
+            characters = data.characters
+        }
     end
 end
 
@@ -757,7 +787,10 @@ function NicknameModule:ProcessDefaultImportString(defaultString)
             if nickname and characters then
                 nickname = strtrim(nickname)
                 local normalizedNick = nickname:lower()
-                newEntries[normalizedNick] = newEntries[normalizedNick] or { originalCase = nickname, characters = {} }
+                newEntries[normalizedNick] = newEntries[normalizedNick] or {
+                    originalCase = nickname,
+                    characters = {}
+                }
                 for charName in string.gmatch(characters, "[^,]+") do
                     charName = strtrim(charName)
                     if charName ~= "" then
@@ -779,7 +812,9 @@ function NicknameModule:ProcessDefaultImportString(defaultString)
         end
         if not targetNickname then
             targetNickname = newData.originalCase
-            existing[targetNickname] = { characters = {} }
+            existing[targetNickname] = {
+                characters = {}
+            }
         end
 
         for _, charName in ipairs(newData.characters) do
@@ -808,7 +843,9 @@ function NicknameModule:ProcessDefaultImportString(defaultString)
                 end
             end
             if not exists then
-                table.insert(existing[targetNickname].characters, { character = charName })
+                table.insert(existing[targetNickname].characters, {
+                    character = charName
+                })
             end
         end
     end
@@ -816,14 +853,11 @@ end
 
 function NicknameModule:PromptReloadNormal()
     if not self.reloadPopupNormal then
-        self.reloadPopupNormal = UI:CreateTextPopup(
-            "Reload UI",
-            "Please reload your UI to apply the changes (Custom Nicknames updated).",
-            "Reload Now",
-            "Later",
-            function() ReloadUI() end,
-            function() end
-        )
+        self.reloadPopupNormal = UI:CreateTextPopup("Reload UI",
+            "Please reload your UI to apply the changes (Custom Nicknames updated).", "Reload Now", "Later", function()
+                ReloadUI()
+            end, function()
+            end)
         self.reloadPopupNormal:SetScript("OnHide", function()
             self.reloadPopupNormal = nil
         end)
@@ -834,27 +868,21 @@ end
 function NicknameModule:PromptPushReload_Default(sender)
     sender = sender or UnitName("player")
     if not self.reloadPopupNormal_Default then
-        self.reloadPopupNormal_Default = UI:CreateTextPopup(
-            "Reload UI",
-            sender .. " has pushed a new DEFAULT nickname update, please reload your UI.",
-            "Reload Now",
-            "Later",
-            function() ReloadUI() end,
-            function() end
-        )
+        self.reloadPopupNormal_Default = UI:CreateTextPopup("Reload UI", sender ..
+            " has pushed a new DEFAULT nickname update, please reload your UI.", "Reload Now", "Later", function()
+            ReloadUI()
+        end, function()
+        end)
         self.reloadPopupNormal_Default:SetScript("OnHide", function()
             self.reloadPopupNormal_Default = nil
         end)
     else
         self.reloadPopupNormal_Default:Hide()
-        self.reloadPopupNormal_Default = UI:CreateTextPopup(
-            "Reload UI",
-            sender .. " has pushed a new DEFAULT nickname update, please reload your UI.",
-            "Reload Now",
-            "Later",
-            function() ReloadUI() end,
-            function() end
-        )
+        self.reloadPopupNormal_Default = UI:CreateTextPopup("Reload UI", sender ..
+            " has pushed a new DEFAULT nickname update, please reload your UI.", "Reload Now", "Later", function()
+            ReloadUI()
+        end, function()
+        end)
         self.reloadPopupNormal_Default:SetScript("OnHide", function()
             self.reloadPopupNormal_Default = nil
         end)
@@ -865,34 +893,26 @@ end
 function NicknameModule:ShowCharacterInputPopup(nickname, existingCharacter, callback)
     local title = existingCharacter and "Edit Character" or "Add New Character"
     local defaultText = existingCharacter or ""
-    local popup, editBox = UI:CreatePopupWithEditBox(
-        title,
-        300,
-        200,
-        defaultText,
-        function(text)
-            if text and text ~= "" then
-                callback(text)
-                NicknameModule:CleanupEmptyNicknames()
-                NicknameModule:RefreshContent()
-                SyncCell()
-                NicknameModule:PromptReloadNormal()
-            end
-        end,
-        function() end
-    )
-    popup:SetScript("OnHide", function() end)
+    local popup, editBox = UI:CreatePopupWithEditBox(title, 300, 200, defaultText, function(text)
+        if text and text ~= "" then
+            callback(text)
+            NicknameModule:CleanupEmptyNicknames()
+            NicknameModule:RefreshContent()
+            SyncCell()
+            NicknameModule:PromptReloadNormal()
+        end
+    end, function()
+    end)
+    popup:SetScript("OnHide", function()
+    end)
     popup:Show()
 end
 
 function NicknameModule:ShowWipeCustomPopup()
     if not self.wipePopup then
-        self.wipePopup = UI:CreateTextPopup(
-            "Reset Custom Nicknames", 
-            "Are you sure you want to remove all custom nicknames?\nYour default nicknames will be re-imported.", 
-            "Confirm",
-            "Cancel",
-            function()
+        self.wipePopup = UI:CreateTextPopup("Reset Custom Nicknames",
+            "Are you sure you want to remove all custom nicknames?\nYour default nicknames will be re-imported.",
+            "Confirm", "Cancel", function()
                 ACT.db.profile.nicknames = {}
                 local defaultStr = ACT.db.profile.defaultNicknames or ""
                 NicknameModule:ProcessImportString(defaultStr)
@@ -900,9 +920,8 @@ function NicknameModule:ShowWipeCustomPopup()
                 NicknameModule:RefreshContent()
                 SyncCell()
                 NicknameModule:PromptReloadNormal()
-            end,
-            function() end
-        )
+            end, function()
+            end)
         self.wipePopup:SetScript("OnHide", function()
             self.wipePopup = nil
         end)
@@ -941,11 +960,14 @@ function NicknameModule:GetFullNicknameString()
                 local nick, chars = strsplit(":", entry)
                 if nick and chars then
                     local normalizedNick = nick:lower()
-                    combined[normalizedNick] = combined[normalizedNick] or { original = nick, chars = {} }
+                    combined[normalizedNick] = combined[normalizedNick] or {
+                        original = nick,
+                        chars = {}
+                    }
                     for charName in string.gmatch(chars, "[^,]+") do
                         charName = strtrim(charName)
                         if charName ~= "" then
-                            combined[normalizedNick].chars[ charName:lower() ] = charName
+                            combined[normalizedNick].chars[charName:lower()] = charName
                         end
                     end
                 end
@@ -955,12 +977,15 @@ function NicknameModule:GetFullNicknameString()
     if ACT.db.profile.nicknames then
         for nick, data in pairs(ACT.db.profile.nicknames) do
             local normalizedNick = nick:lower()
-            combined[normalizedNick] = combined[normalizedNick] or { original = nick, chars = {} }
+            combined[normalizedNick] = combined[normalizedNick] or {
+                original = nick,
+                chars = {}
+            }
             if data.characters then
                 for _, charData in ipairs(data.characters) do
                     local charName = (type(charData) == "table" and charData.character) or charData
                     if charName then
-                        combined[normalizedNick].chars[ charName:lower() ] = charName
+                        combined[normalizedNick].chars[charName:lower()] = charName
                     end
                 end
             end
@@ -983,16 +1008,16 @@ end
 function NicknameModule:ShowNicknameStringPopup()
     local fullNickString = self:GetFullNicknameString()
     if not self.nickStringPopup then
-        self.nickStringPopup, self.nickStringEditBox = UI:CreatePopupWithEditBox(
-            "Nickname String",
-            300,
-            200,
-            fullNickString,
-            function(text)
-                if self.nickStringPopup then self.nickStringPopup:Hide() end
-            end,
-            function() if self.nickStringPopup then self.nickStringPopup:Hide() end end
-        )
+        self.nickStringPopup, self.nickStringEditBox = UI:CreatePopupWithEditBox("Nickname String", 300, 200,
+            fullNickString, function(text)
+                if self.nickStringPopup then
+                    self.nickStringPopup:Hide()
+                end
+            end, function()
+                if self.nickStringPopup then
+                    self.nickStringPopup:Hide()
+                end
+            end)
         self.nickStringPopup:SetScript("OnHide", function()
             self.nickStringPopup = nil
             self.nickStringEditBox = nil
@@ -1042,11 +1067,17 @@ function NicknameModule:CompareDefaultNicknames()
 
     local officerDefault = ACT.db.profile.defaultNicknames or ""
     local progressMessage = "Comparing your default nicknames to party/raid members...\nWaiting for responses..."
-    
+
     if not self.comparePopup then
-        self.comparePopup = UI:CreateTextPopup("Nickname Comparison", progressMessage, "Okay", "Close",
-            function() if self.comparePopup then self.comparePopup:Hide() end end,
-            function() if self.comparePopup then self.comparePopup:Hide() end end)
+        self.comparePopup = UI:CreateTextPopup("Nickname Comparison", progressMessage, "Okay", "Close", function()
+            if self.comparePopup then
+                self.comparePopup:Hide()
+            end
+        end, function()
+            if self.comparePopup then
+                self.comparePopup:Hide()
+            end
+        end)
         self.comparePopup:SetScript("OnHide", function()
             self.comparePopup = nil
         end)
@@ -1099,9 +1130,15 @@ function NicknameModule:CompareDefaultNicknames()
         elseif self.comparePopup then
             self.comparePopup:Hide()
             self.comparePopup = nil
-            self.comparePopup = UI:CreateTextPopup("Nickname Comparison", resultText, "Okay", "Close",
-                function() if self.comparePopup then self.comparePopup:Hide() end end,
-                function() if self.comparePopup then self.comparePopup:Hide() end end)
+            self.comparePopup = UI:CreateTextPopup("Nickname Comparison", resultText, "Okay", "Close", function()
+                if self.comparePopup then
+                    self.comparePopup:Hide()
+                end
+            end, function()
+                if self.comparePopup then
+                    self.comparePopup:Hide()
+                end
+            end)
             self.comparePopup:SetScript("OnHide", function()
                 self.comparePopup = nil
             end)
@@ -1116,12 +1153,8 @@ SlashCmdList["SETDEFAULTNICK"] = function(msg)
         return
     end
     if not NicknameModule.setDefaultPopup then
-        NicknameModule.setDefaultPopup, _ = UI:CreatePopupWithEditBox(
-            "Set New Default Nicknames",
-            300,
-            200,
-            ACT.db.profile.defaultNicknames or "",
-            function(text)
+        NicknameModule.setDefaultPopup, _ = UI:CreatePopupWithEditBox("Set New Default Nicknames", 300, 200,
+            ACT.db.profile.defaultNicknames or "", function(text)
                 if text and text ~= "" then
                     local normalizedParts = {}
                     for entry in string.gmatch(text, "[^;]+") do
@@ -1149,9 +1182,8 @@ SlashCmdList["SETDEFAULTNICK"] = function(msg)
                     SyncCell()
                     NicknameModule:PromptReloadNormal_Default()
                 end
-            end,
-            function() end
-        )
+            end, function()
+            end)
         NicknameModule.setDefaultPopup:SetScript("OnHide", function()
             NicknameModule.setDefaultPopup = nil
         end)
@@ -1173,20 +1205,16 @@ SlashCmdList["WIPENICKNAMES"] = function(msg)
         return
     end
     if not NicknameModule.wipePopup then
-        NicknameModule.wipePopup = UI:CreateTextPopup(
-            "Confirm Wipe",
-            "Are you sure you want to wipe all nicknames? This action cannot be undone.",
-            "Yes, Wipe",
-            "Cancel",
+        NicknameModule.wipePopup = UI:CreateTextPopup("Confirm Wipe",
+            "Are you sure you want to wipe all nicknames? This action cannot be undone.", "Yes, Wipe", "Cancel",
             function()
                 ACT.db.profile.nicknames = {}
                 ACT.db.profile.defaultNicknames = ""
                 NicknameModule:RefreshContent()
                 SyncCell()
                 NicknameModule:PromptReloadNormal()
-            end,
-            function() end
-        )
+            end, function()
+            end)
         NicknameModule.wipePopup:SetScript("OnHide", function()
             NicknameModule.wipePopup = nil
         end)
@@ -1200,30 +1228,23 @@ SlashCmdList["ACTKILLSWITCH"] = function(msg)
         return
     end
     if not NicknameModule.killswitchPopup then
-        NicknameModule.killswitchPopup = UI:CreateTextPopup(
-            "Confirm Killswitch",
+        NicknameModule.killswitchPopup = UI:CreateTextPopup("Confirm Killswitch",
             "Are you sure you want to trigger the killswitch? This will wipe ALL nicknames for everyone.",
-            "Yes, Killswitch",
-            "Cancel",
-            function()
+            "Yes, Killswitch", "Cancel", function()
                 AceComm:SendCommMessage(KILL_PREFIX, "killswitch", "RAID")
                 if not NicknameModule.killswitchPopup then
-                    NicknameModule.killswitchPopup = UI:CreateTextPopup(
-                        "Killswitch Activated",
-                        UnitName("player") .. " has triggered a killswitch! Please reload your UI.",
-                        "Reload Now",
-                        "Later",
-                        function() ReloadUI() end,
-                        function() end
-                    )
+                    NicknameModule.killswitchPopup = UI:CreateTextPopup("Killswitch Activated", UnitName("player") ..
+                        " has triggered a killswitch! Please reload your UI.", "Reload Now", "Later", function()
+                        ReloadUI()
+                    end, function()
+                    end)
                     NicknameModule.killswitchPopup:SetScript("OnHide", function()
                         NicknameModule.killswitchPopup = nil
                     end)
                 end
                 NicknameModule.killswitchPopup:Show()
-            end,
-            function() end
-        )
+            end, function()
+            end)
         NicknameModule.killswitchPopup:SetScript("OnHide", function()
             NicknameModule.killswitchPopup = nil
         end)
@@ -1233,14 +1254,12 @@ end
 
 function NicknameModule:PromptReloadNormal_Default()
     if not self.reloadPopupNormal_Default then
-        self.reloadPopupNormal_Default = UI:CreateTextPopup(
-            "Reload UI",
-            "You have saved a new DEFAULT nickname update. Please reload your UI to apply these changes.",
-            "Reload Now",
-            "Later",
-            function() ReloadUI() end,
-            function() end
-        )
+        self.reloadPopupNormal_Default = UI:CreateTextPopup("Reload UI",
+            "You have saved a new DEFAULT nickname update. Please reload your UI to apply these changes.", "Reload Now",
+            "Later", function()
+                ReloadUI()
+            end, function()
+            end)
         self.reloadPopupNormal_Default:SetScript("OnHide", function()
             self.reloadPopupNormal_Default = nil
         end)

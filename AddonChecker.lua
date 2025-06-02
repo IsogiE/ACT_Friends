@@ -36,8 +36,8 @@ local function SetIconTexture(icon, statusType, playerVersion, latestVersion)
     elseif statusType == 3 then
         if iconExclamation then
             icon:SetTexture(iconExclamation.file)
-            icon:SetTexCoord(iconExclamation.leftTexCoord, iconExclamation.rightTexCoord,
-                             iconExclamation.topTexCoord, iconExclamation.bottomTexCoord)
+            icon:SetTexCoord(iconExclamation.leftTexCoord, iconExclamation.rightTexCoord, iconExclamation.topTexCoord,
+                iconExclamation.bottomTexCoord)
             icon:SetVertexColor(1, 1, 1, 1)
         else
             icon:SetTexture("Interface\\AddOns\\ACT\\media\\DiesalGUIcons16x256x128")
@@ -107,28 +107,20 @@ local function GetRoster()
 end
 
 local addonAbbreviations = {
-    AuraUpdater       = "AU",
-    BigWigs           = "BW",
-    LibOpenRaid       = "LOR",
-    NorthernSkyMedia  = "NSM",
-    RCLootCouncil     = "RCLC",
+    AuraUpdater = "AU",
+    BigWigs = "BW",
+    LibOpenRaid = "LOR",
+    NorthernSkyMedia = "NSM",
+    RCLootCouncil = "RCLC",
     SharedMedia_Causese = "SMC",
     TimelineReminders = "TR",
-    WeakAuras         = "WA",
+    WeakAuras = "WA"
 }
 
 local AddonCheckerModule = {}
 AddonCheckerModule.title = "Addon Checker"
-AddonCheckerModule.addonsToCheck = {
-    "AuraUpdater",
-    "BigWigs",
-    "LibOpenRaid",
-    "NorthernSkyMedia",
-    "RCLootCouncil",
-    "SharedMedia_Causese",
-    "TimelineReminders",
-    "WeakAuras"
-}
+AddonCheckerModule.addonsToCheck = {"AuraUpdater", "BigWigs", "LibOpenRaid", "NorthernSkyMedia", "RCLootCouncil",
+                                    "SharedMedia_Causese", "TimelineReminders", "WeakAuras"}
 AddonCheckerModule.responses = {}
 AddonCheckerModule.horizontalOffset = 0
 
@@ -142,28 +134,48 @@ function AddonCheckerModule:GetUnitClassColor(playerName)
             local unit = "raid" .. i
             if Ambiguate(UnitName(unit), "short") == playerName then
                 local _, class = UnitClass(unit)
-                return RAID_CLASS_COLORS[class] or { r = 1, g = 1, b = 1 }
+                return RAID_CLASS_COLORS[class] or {
+                    r = 1,
+                    g = 1,
+                    b = 1
+                }
             end
         end
     elseif IsInGroup() then
         if Ambiguate(UnitName("player"), "short") == playerName then
             local _, class = UnitClass("player")
-            return RAID_CLASS_COLORS[class] or { r = 1, g = 1, b = 1 }
+            return RAID_CLASS_COLORS[class] or {
+                r = 1,
+                g = 1,
+                b = 1
+            }
         end
         for i = 1, GetNumSubgroupMembers() do
             local unit = "party" .. i
             if Ambiguate(UnitName(unit), "short") == playerName then
                 local _, class = UnitClass(unit)
-                return RAID_CLASS_COLORS[class] or { r = 1, g = 1, b = 1 }
+                return RAID_CLASS_COLORS[class] or {
+                    r = 1,
+                    g = 1,
+                    b = 1
+                }
             end
         end
     else
         if Ambiguate(UnitName("player"), "short") == playerName then
             local _, class = UnitClass("player")
-            return RAID_CLASS_COLORS[class] or { r = 1, g = 1, b = 1 }
+            return RAID_CLASS_COLORS[class] or {
+                r = 1,
+                g = 1,
+                b = 1
+            }
         end
     end
-    return { r = 1, g = 1, b = 1 }
+    return {
+        r = 1,
+        g = 1,
+        b = 1
+    }
 end
 
 function AddonCheckerModule:CreateConfigPanel(parent)
@@ -205,7 +217,8 @@ function AddonCheckerModule:CreateConfigPanel(parent)
     for i, addonName in ipairs(self.addonsToCheck) do
         local abbrev = addonAbbreviations[addonName] or addonName
         local fs = headerFrame:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
-        fs:SetPoint("CENTER", headerFrame, "LEFT", nameColumnWidth + (i - 1) * addonColumnWidth + addonColumnWidth/2, 0)
+        fs:SetPoint("CENTER", headerFrame, "LEFT", nameColumnWidth + (i - 1) * addonColumnWidth + addonColumnWidth / 2,
+            0)
         fs:SetText(abbrev)
         fs:Show()
         fs:SetScript("OnEnter", function(self)
@@ -275,8 +288,12 @@ function AddonCheckerModule:BuildGrid()
         row:SetBackdropColor(0.15, 0.15, 0.15, 1)
         row:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
 
-        local classColor = self:GetUnitClassColor(playerName) or { r = 1, g = 1, b = 1 }
-        local label = UI:CreateLabel(row, playerName, 10, { classColor.r, classColor.g, classColor.b })
+        local classColor = self:GetUnitClassColor(playerName) or {
+            r = 1,
+            g = 1,
+            b = 1
+        }
+        local label = UI:CreateLabel(row, playerName, 10, {classColor.r, classColor.g, classColor.b})
         label:SetPoint("LEFT", row, "LEFT", 5, 0)
         label:SetSize(nameColumnWidth, 20)
         label:SetJustifyH("LEFT")
@@ -289,7 +306,7 @@ function AddonCheckerModule:BuildGrid()
 
         row.icons = {}
         for i = 1, numAddons do
-            local iconX = nameColumnWidth + (i - 1) * addonColumnWidth + (addonColumnWidth - 20)/2
+            local iconX = nameColumnWidth + (i - 1) * addonColumnWidth + (addonColumnWidth - 20) / 2
             local icon = row:CreateTexture(nil, "ARTWORK")
             icon:SetSize(20, 20)
             icon:SetPoint("LEFT", row, "LEFT", iconX, 0)
@@ -391,7 +408,7 @@ function AddonCheckerModule:CheckResponse()
         end
         response[addonName] = {
             loaded = loaded,
-            version = version,
+            version = version
         }
     end
     return response
@@ -399,7 +416,9 @@ end
 
 function AddonCheckerModule:OnEnable()
     AceComm:RegisterComm("ART_AddonChecker", function(prefix, message, distribution, sender)
-        if sender == UnitName("player") then return end
+        if sender == UnitName("player") then
+            return
+        end
 
         if message == "CHECK_REQUEST" then
             local addonInfoTable = {}
@@ -411,7 +430,9 @@ function AddonCheckerModule:OnEnable()
                 end
             end
             local responseStr = (#addonInfoTable > 0) and table.concat(addonInfoTable, ",") or "NONE"
-            if responseStr == "" then responseStr = "NONE" end
+            if responseStr == "" then
+                responseStr = "NONE"
+            end
             AceComm:SendCommMessage("ART_AddonChecker", "STATUS:" .. responseStr, "WHISPER", sender)
 
         elseif message:find("^STATUS:") then
@@ -421,13 +442,19 @@ function AddonCheckerModule:OnEnable()
                 for chunk in string.gmatch(statusStr, "[^,]+") do
                     local addonName, version = strsplit("=", chunk)
                     if addonName and version then
-                        response[addonName] = { loaded = true, version = version }
+                        response[addonName] = {
+                            loaded = true,
+                            version = version
+                        }
                     end
                 end
             end
             for _, addonName in ipairs(self.addonsToCheck) do
                 if not response[addonName] then
-                    response[addonName] = { loaded = false, version = nil }
+                    response[addonName] = {
+                        loaded = false,
+                        version = nil
+                    }
                 end
             end
 
@@ -463,7 +490,7 @@ end
 -- for myself, need to fix this at some point, too lazy, so this'll do for now
 local f = CreateFrame("Frame")
 f:RegisterEvent("ADDON_LOADED")
-f:SetScript("OnEvent", function(self,event,addon)
+f:SetScript("OnEvent", function(self, event, addon)
     if addon == "ACT_Friends" then
         AddonCheckerModule:OnEnable()
     end

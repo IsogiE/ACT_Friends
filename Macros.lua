@@ -3,7 +3,7 @@ local MacrosModule = {}
 MacrosModule.title = "Macros"
 
 function MacrosModule:GetConfigSize()
-    return 800, 600 
+    return 800, 600
 end
 
 function MacrosModule:CreateConfigPanel(parent)
@@ -31,29 +31,30 @@ function MacrosModule:CreateConfigPanel(parent)
     focusMacroLabel:SetText("Set Focus + Target Marker Macro")
 
     self.markerIcons = {}
-    local buttonSpacing = 27 
-    local buttonSize = 25 
-    local totalWidth = buttonSpacing * 8 
-    local startX = (27 - totalWidth) / 2 
+    local buttonSpacing = 27
+    local buttonSize = 25
+    local totalWidth = buttonSpacing * 8
+    local startX = (27 - totalWidth) / 2
 
     for i = 1, 8 do
         local button = CreateFrame("Button", nil, configPanel)
         self.markerIcons[i] = button
-        button:SetSize(buttonSize, buttonSize) 
+        button:SetSize(buttonSize, buttonSize)
         button:SetPoint("BOTTOM", focusMacroEditBox, "TOP", startX + (i - 1) * buttonSpacing, 10)
-        
+
         local texture = button:CreateTexture(nil, "BACKGROUND")
         texture:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcon_" .. i)
         texture:SetAllPoints()
-        
-        local macroText = "/focus [@target]\n/run if not GetRaidTargetIndex(\"focus\") then SetRaidTarget(\"focus\"," .. i .. ") end"
+
+        local macroText = "/focus [@target]\n/run if not GetRaidTargetIndex(\"focus\") then SetRaidTarget(\"focus\"," ..
+                              i .. ") end"
         button:SetScript("OnClick", function()
             self.focusMacroEdit:SetText(macroText)
         end)
     end
 
     local worldMarkerFrame, worldMarkerEditBox = UI:CreateReadOnlyBox(configPanel, 240, 70, "")
-    worldMarkerFrame:SetPoint("TOPLEFT", focusMacroFrame, "TOPRIGHT", 40, 0) 
+    worldMarkerFrame:SetPoint("TOPLEFT", focusMacroFrame, "TOPRIGHT", 40, 0)
     self.worldMarkerEdit = worldMarkerEditBox
 
     local worldMarkerLabel = configPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -62,28 +63,29 @@ function MacrosModule:CreateConfigPanel(parent)
 
     self.worldMarkerIcons = {}
     local markerMap = {5, 6, 3, 2, 7, 1, 4, 8}
-    local buttonSpacing = 27 
-    local buttonSize = 25 
-    local totalWidth = buttonSpacing * 8 
-    local startX = (27 - totalWidth) / 2 
+    local buttonSpacing = 27
+    local buttonSize = 25
+    local totalWidth = buttonSpacing * 8
+    local startX = (27 - totalWidth) / 2
 
     for i = 1, 8 do
         local button = CreateFrame("Button", nil, configPanel)
         self.worldMarkerIcons[i] = button
-        button:SetSize(buttonSize, buttonSize) 
+        button:SetSize(buttonSize, buttonSize)
         button:SetPoint("BOTTOM", worldMarkerEditBox, "TOP", startX + (i - 1) * buttonSpacing, 10)
-        
+
         local texture = button:CreateTexture(nil, "BACKGROUND")
         texture:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcon_" .. i)
         texture:SetAllPoints()
-        
+
         local macroText = "/cwm " .. markerMap[i] .. "\n/wm [@cursor] " .. markerMap[i]
         button:SetScript("OnClick", function()
             self.worldMarkerEdit:SetText(macroText)
         end)
     end
 
-    local waMacroFrame, waMacroEditBox = UI:CreateReadOnlyBox(configPanel, 240, 110, "/ping [@player] Warning\n/run WeakAuras.ScanEvents(\"LIQUID_PRIVATE_AURA_MACRO\", true)\n/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true)")
+    local waMacroFrame, waMacroEditBox = UI:CreateReadOnlyBox(configPanel, 240, 110,
+        "/ping [@player] Warning\n/run WeakAuras.ScanEvents(\"LIQUID_PRIVATE_AURA_MACRO\", true)\n/run WeakAuras.ScanEvents(\"NS_PA_MACRO\", true)")
     waMacroFrame:SetPoint("TOPLEFT", 10, -210)
     self.waMacroEdit = waMacroEditBox
 
@@ -91,7 +93,8 @@ function MacrosModule:CreateConfigPanel(parent)
     waLabel:SetPoint("BOTTOM", waMacroEditBox, "TOP", 0, 15)
     waLabel:SetText("WeakAuras Macros")
 
-    local externalMacroFrame, externalMacroEditBox = UI:CreateReadOnlyBox(configPanel, 240, 110, "/ping [@player] Warning\n/run WeakAuras.ScanEvents(\"NS_EXTERNAL\", true)")
+    local externalMacroFrame, externalMacroEditBox = UI:CreateReadOnlyBox(configPanel, 240, 110,
+        "/ping [@player] Warning\n/run WeakAuras.ScanEvents(\"NS_EXTERNAL\", true)")
     externalMacroFrame:SetPoint("TOPLEFT", waMacroFrame, "TOPRIGHT", 40, 0)
     self.externalMacroEdit = externalMacroEditBox
 

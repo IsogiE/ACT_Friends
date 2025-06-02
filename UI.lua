@@ -11,7 +11,7 @@ function UI:CreateButton(parent, text, width, height, onClickCallback)
     button:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+        edgeSize = 1
     })
     button:SetBackdropColor(0.1, 0.1, 0.1, 1)
     button:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
@@ -34,7 +34,7 @@ function UI:CreateReadOnlyBox(parent, width, height, defaultText)
     box:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+        edgeSize = 1
     })
     box:SetBackdropColor(0.1, 0.1, 0.1, 1)
     box:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
@@ -77,7 +77,6 @@ function UI:CreateReadOnlyBox(parent, width, height, defaultText)
     return box, editBox
 end
 
-
 -- Template: (Multiline) Edit Box
 function UI:CreateMultilineEditBox(parent, width, height, defaultText, onEnterPressed)
     local editBoxFrame = CreateFrame("Frame", nil, parent, "BackdropTemplate")
@@ -93,7 +92,7 @@ function UI:CreateMultilineEditBox(parent, width, height, defaultText, onEnterPr
 
     local scrollFrame = CreateFrame("ScrollFrame", nil, editBoxFrame, "UIPanelScrollFrameTemplate")
     scrollFrame:SetPoint("TOPLEFT", 5, -5)
-    scrollFrame:SetPoint("BOTTOMRIGHT", -5, 5) 
+    scrollFrame:SetPoint("BOTTOMRIGHT", -5, 5)
 
     scrollFrame.ScrollBar:Hide()
 
@@ -101,7 +100,7 @@ function UI:CreateMultilineEditBox(parent, width, height, defaultText, onEnterPr
     editBox:SetMultiLine(true)
     editBox:SetAutoFocus(false)
     editBox:SetFontObject("GameFontHighlightSmall")
-    editBox:SetWidth(width - 10) 
+    editBox:SetWidth(width - 10)
     editBox:SetTextInsets(5, 5, 5, 5)
     editBox:SetText(defaultText or "")
     scrollFrame:SetScrollChild(editBox)
@@ -142,7 +141,7 @@ function UI:CreateMultilineEditBox(parent, width, height, defaultText, onEnterPr
     editBoxFrame:SetScript("OnMouseDown", function()
         editBox:SetFocus()
     end)
-    
+
     scrollFrame:EnableMouse(true)
     scrollFrame:SetScript("OnMouseDown", function()
         editBox:SetFocus()
@@ -152,14 +151,14 @@ function UI:CreateMultilineEditBox(parent, width, height, defaultText, onEnterPr
 end
 
 -- Template: Dropdown
-local activeDropdown = nil  
+local activeDropdown = nil
 function UI:CreateDropdown(parent, width, height)
     local dropdown = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     dropdown:SetSize(width, height)
     dropdown:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+        edgeSize = 1
     })
     dropdown:SetBackdropColor(0.1, 0.1, 0.1, 1)
     dropdown:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
@@ -180,7 +179,7 @@ function UI:CreateDropdown(parent, width, height)
     dropdown.list:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+        edgeSize = 1
     })
     dropdown.list:SetBackdropColor(0, 0, 0, 0.9)
     dropdown.list:SetBackdropBorderColor(0, 0, 0, 1)
@@ -195,7 +194,7 @@ function UI:CreateDropdown(parent, width, height)
     dropdown.scrollFrame = CreateFrame("ScrollFrame", nil, dropdown.list, "UIPanelScrollFrameTemplate")
     dropdown.scrollFrame:SetPoint("TOPLEFT", 5, -5)
     dropdown.scrollFrame:SetPoint("BOTTOMRIGHT", -25, 5)
-    
+
     dropdown.scrollChild = CreateFrame("Frame")
     dropdown.scrollChild:SetSize(width - 20, 150)
     dropdown.scrollFrame:SetScrollChild(dropdown.scrollChild)
@@ -205,7 +204,11 @@ function UI:CreateDropdown(parent, width, height)
             activeDropdown.list:Hide()
         end
         dropdown.list:SetShown(not dropdown.list:IsShown())
-        if dropdown.list:IsShown() then activeDropdown = dropdown else activeDropdown = nil end
+        if dropdown.list:IsShown() then
+            activeDropdown = dropdown
+        else
+            activeDropdown = nil
+        end
         if dropdown.list:IsShown() then
             local frame = CreateFrame("Frame")
             frame:SetScript("OnMouseDown", function(_, button)
@@ -219,7 +222,9 @@ function UI:CreateDropdown(parent, width, height)
     end)
     dropdown:SetScript("OnHide", function()
         dropdown.list:Hide()
-        if activeDropdown == dropdown then activeDropdown = nil end
+        if activeDropdown == dropdown then
+            activeDropdown = nil
+        end
     end)
     return dropdown
 end
@@ -232,15 +237,23 @@ function UI:AddDropdownOption(dropdown, text, value, onClick)
     option.text:SetText(text)
     option.text:SetJustifyH("LEFT")
     option.text:SetPoint("LEFT", option, "LEFT", 5, 0)
-    option:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8x8" })
+    option:SetBackdrop({
+        bgFile = "Interface\\Buttons\\WHITE8x8"
+    })
     option:SetBackdropColor(0, 0, 0, 0)
-    option:SetScript("OnEnter", function(self) self:SetBackdropColor(1, 1, 1, 0.2) end)
-    option:SetScript("OnLeave", function(self) self:SetBackdropColor(0, 0, 0, 0) end)
+    option:SetScript("OnEnter", function(self)
+        self:SetBackdropColor(1, 1, 1, 0.2)
+    end)
+    option:SetScript("OnLeave", function(self)
+        self:SetBackdropColor(0, 0, 0, 0)
+    end)
     option:SetScript("OnMouseUp", function()
         dropdown.button.text:SetText(text)
         dropdown.selectedValue = value
         dropdown.list:Hide()
-        if onClick then onClick() end
+        if onClick then
+            onClick()
+        end
     end)
     dropdown.scrollChild.buttons = dropdown.scrollChild.buttons or {}
     table.insert(dropdown.scrollChild.buttons, option)
@@ -291,12 +304,16 @@ function UI:CreatePopupWithEditBox(title, width, height, defaultText, onAccept, 
     popup:SetMovable(true)
     popup:EnableMouse(true)
     popup:RegisterForDrag("LeftButton")
-    popup:SetScript("OnDragStart", function(self) self:StartMoving() end)
-    popup:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
+    popup:SetScript("OnDragStart", function(self)
+        self:StartMoving()
+    end)
+    popup:SetScript("OnDragStop", function(self)
+        self:StopMovingOrSizing()
+    end)
     popup:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+        edgeSize = 1
     })
     popup:SetBackdropColor(0.1, 0.1, 0.1, 1)
     popup:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
@@ -311,14 +328,18 @@ function UI:CreatePopupWithEditBox(title, width, height, defaultText, onAccept, 
     editFrame:SetPoint("TOP", titleLabel, "BOTTOM", 0, -10)
 
     local acceptButton = UI:CreateButton(popup, "Accept", 80, 25, function()
-         if onAccept then onAccept(editBox:GetText()) end
-         popup:Hide()
+        if onAccept then
+            onAccept(editBox:GetText())
+        end
+        popup:Hide()
     end)
     acceptButton:SetPoint("BOTTOMLEFT", popup, "BOTTOMLEFT", 20, 20)
 
     local cancelButton = UI:CreateButton(popup, "Cancel", 80, 25, function()
-         if onCancel then onCancel() end
-         popup:Hide()
+        if onCancel then
+            onCancel()
+        end
+        popup:Hide()
     end)
     cancelButton:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -20, 20)
 
@@ -334,12 +355,16 @@ function UI:CreateTextPopup(title, message, button1Text, button2Text, onAccept, 
     popup:SetMovable(true)
     popup:EnableMouse(true)
     popup:RegisterForDrag("LeftButton")
-    popup:SetScript("OnDragStart", function(self) self:StartMoving() end)
-    popup:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
+    popup:SetScript("OnDragStart", function(self)
+        self:StartMoving()
+    end)
+    popup:SetScript("OnDragStop", function(self)
+        self:StopMovingOrSizing()
+    end)
     popup:SetBackdrop({
         bgFile = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+        edgeSize = 1
     })
     popup:SetBackdropColor(0.1, 0.1, 0.1, 1)
     popup:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
@@ -355,14 +380,18 @@ function UI:CreateTextPopup(title, message, button1Text, button2Text, onAccept, 
     messageLabel:SetText(message)
 
     local acceptButton = UI:CreateButton(popup, button1Text, 80, 25, function()
-         if onAccept then onAccept() end
-         popup:Hide()
+        if onAccept then
+            onAccept()
+        end
+        popup:Hide()
     end)
     acceptButton:SetPoint("BOTTOMLEFT", popup, "BOTTOMLEFT", 20, 20)
-    
+
     local cancelButton = UI:CreateButton(popup, button2Text, 80, 25, function()
-         if onCancel then onCancel() end
-         popup:Hide()
+        if onCancel then
+            onCancel()
+        end
+        popup:Hide()
     end)
     cancelButton:SetPoint("BOTTOMRIGHT", popup, "BOTTOMRIGHT", -20, 20)
 

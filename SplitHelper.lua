@@ -1,12 +1,11 @@
 local SplitHelper = {}
 
-SplitHelper.characterRows = {} 
-
+SplitHelper.characterRows = {}
 
 SplitHelper.title = "Split Helper"
 
 function SplitHelper:GetConfigSize()
-    return 1000, 600 
+    return 1000, 600
 end
 
 function SplitHelper:CreateConfigPanel(parent)
@@ -28,7 +27,7 @@ function SplitHelper:CreateConfigPanel(parent)
     local importBoxFrame, importEditBox = UI:CreateMultilineEditBox(configPanel, 520, 60, "")
     importBoxFrame:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -10)
     self.importBox = importEditBox
-    
+
     errorHandler = configPanel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     errorHandler:SetPoint("TOPRIGHT", importBoxFrame, "BOTTOMRIGHT", 0, -5)
 
@@ -41,8 +40,8 @@ function SplitHelper:CreateConfigPanel(parent)
     scrollbar = scrollFrame.ScrollBar
     scrollbar:Hide()
 
-    self.scrollContent = CreateFrame("Frame", nil, scrollFrame) 
-    self.scrollContent:SetSize(520, 300) 
+    self.scrollContent = CreateFrame("Frame", nil, scrollFrame)
+    self.scrollContent:SetSize(520, 300)
     scrollFrame:SetScrollChild(self.scrollContent)
 
     self.resultText = self.scrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -79,10 +78,10 @@ function SplitHelper:CreateConfigPanel(parent)
 
     local unexpectedScrollFrame = CreateFrame("ScrollFrame", nil, configPanel, "UIPanelScrollFrameTemplate")
     unexpectedScrollFrame:SetSize(140, 300)
-    unexpectedScrollFrame:SetPoint("TOPLEFT", scrollFrame, "TOPRIGHT", 40, -30) 
+    unexpectedScrollFrame:SetPoint("TOPLEFT", scrollFrame, "TOPRIGHT", 40, -30)
 
-    self.unexpectedScrollContent = CreateFrame("Frame", nil, unexpectedScrollFrame) 
-    self.unexpectedScrollContent:SetSize(520, 300) 
+    self.unexpectedScrollContent = CreateFrame("Frame", nil, unexpectedScrollFrame)
+    self.unexpectedScrollContent:SetSize(520, 300)
     unexpectedScrollFrame:SetScrollChild(self.unexpectedScrollContent)
 
     self.unexpectedResultText = self.unexpectedScrollContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -135,19 +134,24 @@ function SplitHelper:CreateConfigPanel(parent)
 end
 
 function SplitHelper:DisplayImportedCharacters()
-    if not self.selectedIndex then return end
+    if not self.selectedIndex then
+        return
+    end
     local profile = ACT.db.profile.splits.profiles[self.selectedIndex]
-    if not profile then return end
+    if not profile then
+        return
+    end
 
     for _, child in ipairs({self.scrollContent:GetChildren()}) do
-        child:Hide() 
+        child:Hide()
     end
 
     for _, child in ipairs({self.unexpectedScrollContent:GetChildren()}) do
-        child:Hide() 
+        child:Hide()
     end
 
-    local inBoth, inSheetNotRaid, inRaidNotSheet, unexpectedPlayers = self:CompareAndColorCharacters(self:GetRaidCharacters(), profile.characters)
+    local inBoth, inSheetNotRaid, inRaidNotSheet, unexpectedPlayers =
+        self:CompareAndColorCharacters(self:GetRaidCharacters(), profile.characters)
     self:PrintColoredCharacters(inBoth, inSheetNotRaid, inRaidNotSheet)
 
     self:PrintUnexpectedCharacters(unexpectedPlayers)
@@ -212,7 +216,7 @@ function SplitHelper:CompareAndColorCharacters(raidCharacters, sheetCharacters)
     local inBoth = {}
     local inSheetNotRaid = {}
     local inRaidNotSheet = {}
-    local unexpectedPlayers = {} 
+    local unexpectedPlayers = {}
 
     local strippedRaidCharacters = self:StripRealmNames(raidCharacters)
     local strippedSheetCharacters = self:StripRealmNames(sheetCharacters)
@@ -245,11 +249,11 @@ function SplitHelper:CompareAndColorCharacters(raidCharacters, sheetCharacters)
             end
         end
         if not foundInSheet then
-            table.insert(unexpectedPlayers, character) 
+            table.insert(unexpectedPlayers, character)
         end
     end
 
-    return inBoth, inSheetNotRaid, inRaidNotSheet, unexpectedPlayers 
+    return inBoth, inSheetNotRaid, inRaidNotSheet, unexpectedPlayers
 end
 
 function SplitHelper:PrintColoredCharacters(inBoth, inSheetNotRaid, inRaidNotSheet, unexpectedPlayers)
@@ -259,20 +263,20 @@ function SplitHelper:PrintColoredCharacters(inBoth, inSheetNotRaid, inRaidNotShe
     unexpectedPlayers = unexpectedPlayers or {}
 
     for _, child in ipairs({self.scrollContent:GetChildren()}) do
-        child:Hide()  
+        child:Hide()
     end
 
     self.scrollContent:ClearAllPoints()
     self.scrollContent:SetPoint("TOPLEFT", self.scrollContent:GetParent(), "TOPLEFT", 0, 0)
 
-    local yOffset = -30 
-    local xOffset = 0 
+    local yOffset = -30
+    local xOffset = 0
 
     local function createRow(character, color)
         local row = CreateFrame("Frame", nil, self.scrollContent, "BackdropTemplate")
         row:SetSize(120, 30)
         row:SetPoint("TOPLEFT", self.scrollContent, "TOPLEFT", xOffset, yOffset)
-        
+
         row:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8x8",
             edgeFile = "Interface\\Buttons\\WHITE8x8",
@@ -286,51 +290,51 @@ function SplitHelper:PrintColoredCharacters(inBoth, inSheetNotRaid, inRaidNotShe
         nameText:SetText(color .. character .. "|r")
 
         yOffset = yOffset - 30 + 1
-        
+
         if yOffset == -175 then
             yOffset = yOffset - 10
         end
 
         if yOffset <= -(30 * 10 + 10) then
-            yOffset = -30 
-            xOffset = xOffset + 133 
+            yOffset = -30
+            xOffset = xOffset + 133
         end
 
         table.insert(self.characterRows, row)
     end
 
     for i, character in ipairs(inBoth) do
-        createRow(character, "|cff00ff00") 
+        createRow(character, "|cff00ff00")
     end
 
     for i, character in ipairs(inSheetNotRaid) do
-        createRow(character, "|cffff0000") 
+        createRow(character, "|cffff0000")
     end
 
     local totalRows = math.ceil(#inBoth / 10) + math.ceil(#inSheetNotRaid / 10) + math.ceil(#inRaidNotSheet / 10)
     self.scrollContent:SetHeight(totalRows * 30)
 
-    self.scrollContent:Show() 
+    self.scrollContent:Show()
 end
 
 function SplitHelper:PrintUnexpectedCharacters(unexpectedPlayers)
     unexpectedPlayers = unexpectedPlayers or {}
 
     for _, child in ipairs({self.unexpectedScrollContent:GetChildren()}) do
-        child:Hide() 
+        child:Hide()
     end
 
     self.unexpectedScrollContent:ClearAllPoints()
     self.unexpectedScrollContent:SetPoint("TOPLEFT", self.unexpectedScrollContent:GetParent(), "TOPLEFT", 0, 0)
 
-    local yOffset = 0 
-    local xOffset = 10  
+    local yOffset = 0
+    local xOffset = 10
 
     local function createUnexpectedRow(character)
         local row = CreateFrame("Frame", nil, self.unexpectedScrollContent, "BackdropTemplate")
         row:SetSize(120, 30)
         row:SetPoint("TOPLEFT", self.unexpectedScrollContent, "TOPLEFT", xOffset, yOffset)
-        
+
         row:SetBackdrop({
             bgFile = "Interface\\Buttons\\WHITE8x8",
             edgeFile = "Interface\\Buttons\\WHITE8x8",
@@ -338,13 +342,13 @@ function SplitHelper:PrintUnexpectedCharacters(unexpectedPlayers)
         })
         row:SetBackdropColor(0.15, 0.15, 0.15, 1)
         row:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
-    
+
         local nameText = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
         nameText:SetPoint("CENTER")
-        nameText:SetText("|cffffff00" .. character .. "|r") 
-    
+        nameText:SetText("|cffffff00" .. character .. "|r")
+
         yOffset = yOffset - 30
-    
+
         table.insert(self.characterRows, row)
     end
 
@@ -355,7 +359,7 @@ function SplitHelper:PrintUnexpectedCharacters(unexpectedPlayers)
     local totalRows = math.ceil(#unexpectedPlayers / 10)
     self.unexpectedScrollContent:SetHeight(totalRows * 30)
 
-    self.unexpectedScrollContent:Show() 
+    self.unexpectedScrollContent:Show()
 end
 
 function SplitHelper:CreateCharacterRow(character, colorText, yOffset)
@@ -388,22 +392,25 @@ function SplitHelper:ClearData(index)
 
         for _, row in ipairs(self.characterRows) do
             row:Hide()
-            row = nil 
+            row = nil
         end
-        self.characterRows = {} 
+        self.characterRows = {}
     end
 end
 
-
 function SplitHelper:CheckCharacters()
-    if not self.selectedIndex then return end
-    
+    if not self.selectedIndex then
+        return
+    end
+
     local profile = ACT.db.profile.splits.profiles[self.selectedIndex]
-    if not profile then return end
+    if not profile then
+        return
+    end
 
     local raidCharacters = self:GetRaidCharacters()
-    local inBoth, inSheetNotRaid, inRaidNotSheet, unexpectedPlayers = self:CompareAndColorCharacters(self:GetRaidCharacters(), profile.characters)
-
+    local inBoth, inSheetNotRaid, inRaidNotSheet, unexpectedPlayers =
+        self:CompareAndColorCharacters(self:GetRaidCharacters(), profile.characters)
 
     self:PrintColoredCharacters(inBoth, inSheetNotRaid, inRaidNotSheet)
     self:PrintUnexpectedCharacters(unexpectedPlayers)
@@ -427,13 +434,11 @@ function SplitHelper:ShowRenamePopup(index)
             if self.renamePopup then
                 self.renamePopup:Hide()
             end
-        end,
-        function()
+        end, function()
             if self.renamePopup then
                 self.renamePopup:Hide()
             end
-        end
-    )
+        end)
     self.renamePopup:SetScript("OnHide", function()
         self.renamePopup = nil
         self.renameEditBox = nil

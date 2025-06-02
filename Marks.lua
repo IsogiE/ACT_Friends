@@ -5,15 +5,15 @@ local function CreateCustomEditBox(parent, width, height)
     local edit = CreateFrame("EditBox", nil, parent, "BackdropTemplate")
     edit:SetSize(width, height)
     edit:SetAutoFocus(false)
-    edit:SetFont("Fonts\\FRIZQT__.TTF", 14, "") 
+    edit:SetFont("Fonts\\FRIZQT__.TTF", 14, "")
     edit:SetJustifyH("LEFT")
 
     edit:SetBackdrop({
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 1,
+        edgeSize = 1
     })
-    edit:SetBackdropColor(0, 0, 0, 0) 
-    edit:SetBackdropBorderColor(0.3, 0.3, 0.3, 1) 
+    edit:SetBackdropColor(0, 0, 0, 0)
+    edit:SetBackdropBorderColor(0.3, 0.3, 0.3, 1)
 
     edit:SetText("")
     edit:SetScript("OnEscapePressed", function(self)
@@ -63,18 +63,21 @@ function RaidMarksModule:CreateConfigPanel(parent)
     end)
 
     self.rows = {}
-    local rowSpacing = 8 
-    local rowStartY  = -10
+    local rowSpacing = 8
+    local rowStartY = -10
     for i = 1, 8 do
         local icon = configPanel:CreateTexture(nil, "ARTWORK")
-        icon:SetSize(24, 24) 
+        icon:SetSize(24, 24)
         icon:SetTexture("Interface\\TargetingFrame\\UI-RaidTargetingIcon_" .. i)
         icon:SetPoint("TOPLEFT", toggleButton, "BOTTOMLEFT", 0, rowStartY - (i - 1) * (24 + rowSpacing))
 
         local editBox = CreateCustomEditBox(configPanel, 300, 24)
         editBox:SetPoint("LEFT", icon, "RIGHT", 10, 0)
 
-        self.rows[i] = {icon = icon, editBox = editBox}
+        self.rows[i] = {
+            icon = icon,
+            editBox = editBox
+        }
     end
 
     self.configPanel = configPanel
@@ -113,7 +116,7 @@ function RaidMarksModule:OnUpdate(elapsed)
     if self.tmr < 0.5 then
         return
     end
-    self.tmr = 0 
+    self.tmr = 0
 
     local function resolveUnit(nameText)
         if UnitName(nameText) then
@@ -124,7 +127,7 @@ function RaidMarksModule:OnUpdate(elapsed)
             return resolved
         end
         return nil
-    end    
+    end
 
     for i = 1, 8 do
         local row = self.rows[i]

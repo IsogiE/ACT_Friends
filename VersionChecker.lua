@@ -9,9 +9,9 @@ function VersionCheckerModule:GetConfigSize()
 end
 
 _G.VACT = _G.VACT or {}
-local VACT = _G.VACT 
+local VACT = _G.VACT
 
-local versionCheckTimer = nil 
+local versionCheckTimer = nil
 
 local function OnAddonLoaded(addonName)
     VACT.VersionCheck = VACT.VersionCheck or {}
@@ -28,7 +28,6 @@ local function OnAddonLoaded(addonName)
         VACT.VersionCheck.version = ART_VersionCheckDB.version
     end
 end
-
 
 local function compareVersions(v1, v2)
     local v1Parts = {strsplit(".", v1)}
@@ -50,9 +49,9 @@ local function formatVersion(ver)
     if ver:find("%.") then
         return ver
     elseif #ver == 2 then
-        return ver:sub(1,1) .. "." .. ver:sub(2,2)
+        return ver:sub(1, 1) .. "." .. ver:sub(2, 2)
     else
-        return ver 
+        return ver
     end
 end
 
@@ -67,7 +66,9 @@ function VersionCheckerModule:SendVersionCheck()
     local channel = IsInRaid() and "RAID" or "PARTY"
     AceComm:SendCommMessage("ADVANCEVERSION", message, channel)
 
-    versionCheckTimer = C_Timer.NewTimer(5, function() VersionCheckerModule:CheckForNonResponders() end)
+    versionCheckTimer = C_Timer.NewTimer(5, function()
+        VersionCheckerModule:CheckForNonResponders()
+    end)
 end
 
 function VersionCheckerModule:SendVersionResponse(target, senderVersion)
@@ -82,10 +83,10 @@ end
 function VersionCheckerModule:OnCommReceived(prefix, message, distribution, sender)
     if prefix == "ADVANCEVERSION" then
         local command, ver = strsplit(":", message)
-        local playerName = Ambiguate(sender, "mail")  
+        local playerName = Ambiguate(sender, "mail")
         if command == "VERSION_CHECK" then
             VACT.VersionCheck.responses[playerName] = ver
-            VersionCheckerModule:SendVersionResponse(playerName, ver) 
+            VersionCheckerModule:SendVersionResponse(playerName, ver)
         elseif command == "VERSION_RESPONSE" then
             VACT.VersionCheck.responses[playerName] = ver
             VersionCheckerModule:ShowResults()
@@ -101,7 +102,7 @@ function VersionCheckerModule:CheckForNonResponders()
         local unit = groupType .. i
         local playerName = GetUnitName(unit, true)
         if playerName then
-            playerName = Ambiguate(playerName, "mail") 
+            playerName = Ambiguate(playerName, "mail")
             if not VACT.VersionCheck.responses[playerName] then
                 VACT.VersionCheck.responses[playerName] = "Addon not installed"
             end
@@ -112,7 +113,10 @@ function VersionCheckerModule:CheckForNonResponders()
 end
 
 function VersionCheckerModule:ShowResults()
-    local highestVersions = { ACT = nil, ACT_Friends = nil }
+    local highestVersions = {
+        ACT = nil,
+        ACT_Friends = nil
+    }
     for player, ver in pairs(VACT.VersionCheck.responses) do
         if ver ~= "Addon not installed" then
             local group = ver:find(" %(Friends%)") and "ACT_Friends" or "ACT"
@@ -132,7 +136,9 @@ function VersionCheckerModule:ShowResults()
         else
             local group = ver:find(" %(Friends%)") and "ACT_Friends" or "ACT"
             local rawVer = ver:gsub(" %(Friends%)", "")
-            color = (highestVersions[group] and compareVersions(rawVer, highestVersions[group]) == 0) and "|cff00ff00" or "|cffff0000"
+            color =
+                (highestVersions[group] and compareVersions(rawVer, highestVersions[group]) == 0) and "|cff00ff00" or
+                    "|cffff0000"
             ver = formatVersion(ver)
         end
         result = result .. color .. displayName .. ": " .. ver .. "|r\n"
@@ -143,7 +149,9 @@ function VersionCheckerModule:ShowResults()
     end
 end
 
-AceComm:RegisterComm("ADVANCEVERSION", function(...) VersionCheckerModule:OnCommReceived(...) end)
+AceComm:RegisterComm("ADVANCEVERSION", function(...)
+    VersionCheckerModule:OnCommReceived(...)
+end)
 
 local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
@@ -176,7 +184,7 @@ function VersionCheckerModule:CreateConfigPanel(parent)
     local checkVersionsButton = UI:CreateButton(configPanel, "Check Versions", 120, 30, function()
         VersionCheckerModule:CheckVersions()
     end)
-    
+
     checkVersionsButton:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -10)
 
     local resultFrame, resultText = UI:CreateReadOnlyBox(configPanel, 520, 450, "")
@@ -184,7 +192,7 @@ function VersionCheckerModule:CreateConfigPanel(parent)
 
     resultFrame:SetScript("OnShow", function()
         VACT.VersionCheck.responses = {}
-        resultText:SetText("") 
+        resultText:SetText("")
     end)
 
     resultFrame:SetScript("OnHide", function()
