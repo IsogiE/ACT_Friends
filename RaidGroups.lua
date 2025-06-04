@@ -995,7 +995,7 @@ function RaidGroups:CreateConfigPanel(parent)
                         end
                     end)
                 RaidGroups.noPresetsInfoPopupInstance:SetFrameStrata("HIGH")
-                RaidGroups.noPresetsInfoPopupInstance:SetFrameLevel(250)
+                RaidGroups.noPresetsInfoPopupInstance:SetFrameLevel(450)
                 RaidGroups.noPresetsInfoPopupInstance:SetScript("OnHide", function()
                     RaidGroups.noPresetsInfoPopupInstance = nil
                 end)
@@ -1149,7 +1149,7 @@ function RaidGroups:CreateConfigPanel(parent)
                             end
                         end)
                     RaidGroups.noPresetsInfoPopupInstance:SetFrameStrata("HIGH")
-                    RaidGroups.noPresetsInfoPopupInstance:SetFrameLevel(250)
+                    RaidGroups.noPresetsInfoPopupInstance:SetFrameLevel(450)
                     RaidGroups.noPresetsInfoPopupInstance:SetScript("OnHide", function()
                         RaidGroups.noPresetsInfoPopupInstance = nil
                     end)
