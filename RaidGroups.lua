@@ -422,9 +422,7 @@ local function EnableGroupEditBoxDrag(editBox)
             self.dragFrame = nil
         end
         self.isDragging = nil
-        if RaidGroups.currentListType then
-            RaidGroups:UpdateNameList(RaidGroups.currentListType)
-        end
+        RaidGroups:UpdateNameList(RaidGroups.currentListType)
     end)
 end
 
@@ -559,9 +557,7 @@ function RaidGroups:CreateConfigPanel(parent)
                     end
                     self.usedName = plain
                 end
-                if RaidGroups.currentListType then
-                    RaidGroups:UpdateNameList(RaidGroups.currentListType)
-                end
+                RaidGroups:UpdateNameList(RaidGroups.currentListType)
             end)
             EnableGroupEditBoxDrag(editBox)
             self.groupSlots[group][slot] = editBox
@@ -605,9 +601,7 @@ function RaidGroups:CreateConfigPanel(parent)
                 end
             end
         end
-        if RaidGroups.currentListType then
-            RaidGroups:UpdateNameList(RaidGroups.currentListType)
-        end
+        RaidGroups:UpdateNameList(RaidGroups.currentListType)
     end)
 
     local applyGroupsButton = UI:CreateButton(configPanel, "Apply Groups", 150, 30)
@@ -660,9 +654,7 @@ function RaidGroups:CreateConfigPanel(parent)
                 editBox.usedName = nil
             end
         end
-        if RaidGroups.currentListType then
-            RaidGroups:UpdateNameList(RaidGroups.currentListType)
-        end
+        RaidGroups:UpdateNameList(RaidGroups.currentListType)
     end)
 
     local part3Frame = CreateFrame("Frame", nil, configPanel)
@@ -819,10 +811,10 @@ function RaidGroups:CreateConfigPanel(parent)
                                         table.insert(errors, "Line " .. i .. " (Name: '" .. presetName .. "'): " ..
                                             (err or "Invalid preset string format."))
                                     end
+                                else
+                                    table.insert(errors, "Line " .. i ..
+                                        ": Invalid format. Expected 'Preset Name:PresetString'.")
                                 end
-                            else
-                                table.insert(errors,
-                                    "Line " .. i .. ": Invalid format. Expected 'Preset Name:PresetString'.")
                             end
                         end
                     end
@@ -1120,7 +1112,7 @@ function RaidGroups:CreateConfigPanel(parent)
                         RaidGroups.confirmDeleteAllPopupInstance = nil
                     end)
                 RaidGroups.confirmDeleteAllPopupInstance:SetFrameStrata("HIGH")
-                RaidGroups.confirmDeleteAllPopupInstance:SetFrameLevel(250)
+                RaidGroups.confirmDeleteAllPopupInstance:SetFrameLevel(450)
                 RaidGroups.confirmDeleteAllPopupInstance:SetScript("OnHide", function()
                     RaidGroups.confirmDeleteAllPopupInstance = nil
                 end)
@@ -1212,14 +1204,14 @@ function RaidGroups:CreateConfigPanel(parent)
                             end, function()
                             end)
                         reportPopup:SetFrameStrata("HIGH")
-                        reportPopup:SetFrameLevel(255)
+                        reportPopup:SetFrameLevel(450)
                         reportPopup:Show()
                         RaidGroups.confirmDeleteSelectedPopupInstance = nil
                     end, function()
                         RaidGroups.confirmDeleteSelectedPopupInstance = nil
                     end)
                 RaidGroups.confirmDeleteSelectedPopupInstance:SetFrameStrata("HIGH")
-                RaidGroups.confirmDeleteSelectedPopupInstance:SetFrameLevel(250)
+                RaidGroups.confirmDeleteSelectedPopupInstance:SetFrameLevel(450)
                 RaidGroups.confirmDeleteSelectedPopupInstance:SetScript("OnHide", function()
                     RaidGroups.confirmDeleteSelectedPopupInstance = nil
                 end)
@@ -1282,7 +1274,7 @@ function RaidGroups:CreateConfigPanel(parent)
                     RaidGroups.confirmSingleDeletePopupInstance = nil
                 end)
             RaidGroups.confirmSingleDeletePopupInstance:SetFrameStrata("HIGH")
-            RaidGroups.confirmSingleDeletePopupInstance:SetFrameLevel(250)
+            RaidGroups.confirmSingleDeletePopupInstance:SetFrameLevel(450)
             RaidGroups.confirmSingleDeletePopupInstance:SetScript("OnHide", function()
                 RaidGroups.confirmSingleDeletePopupInstance = nil
             end)
@@ -1343,36 +1335,73 @@ function RaidGroups:GetUsedNames()
 end
 
 function RaidGroups:UpdateNameList(listType)
-    if not listType then
-        self:ClearNameList()
-        return
-    end
     self.rosterMapping = {}
-    if not self.nameListContent then
-        return
-    end
-
-    local names = {}
+    local playerSubgroups = {}
+    local raidMemberNames = {}
     local currentRealm = GetRealmName()
+    local namesForList = {}
 
-    if listType == "raid" then
+    if IsInRaid() then
         local numRaid = GetNumGroupMembers() or 0
         for i = 1, numRaid do
-            local name, _, _, _, _, class = GetRaidRosterInfo(i)
+            local name, _, subgroup, _, _, class = GetRaidRosterInfo(i)
             if name then
                 local baseName, realmName = name:match("^(.-)%-(.+)$")
                 local displayName = (baseName and realmName) and
                                         ((realmName == currentRealm) and baseName or (baseName .. "-" .. realmName)) or
                                         name
-                table.insert(names, {
-                    name = displayName,
-                    class = class,
-                    order = i
-                })
+
+                playerSubgroups[displayName] = subgroup
+                raidMemberNames[displayName] = true
                 self.rosterMapping[displayName] = GetClassColor(class)
+
+                if listType == "raid" then
+                    table.insert(namesForList, {
+                        name = displayName,
+                        class = class,
+                        order = i
+                    })
+                end
             end
         end
-    elseif listType == "guild" then
+    end
+
+    local redColor = {1.0, 0.2, 0.2, 0.5}
+    local yellowColor = {1.0, 1.0, 0.0, 0.5}
+    local defaultColor = {0.1, 0.1, 0.1, 1}
+
+    if self.groupSlots then
+        for _, group in ipairs(self.groupSlots) do
+            for _, editBox in ipairs(group) do
+                local container = editBox:GetParent()
+                if editBox.usedName and editBox.usedName ~= "" then
+                    local playerName = editBox.usedName
+                    local subgroup = playerSubgroups[playerName]
+
+                    if not raidMemberNames[playerName] then
+                        container:SetBackdropColor(unpack(redColor))
+                    elseif subgroup and subgroup >= 7 then
+                        container:SetBackdropColor(unpack(yellowColor))
+                    else
+                        container:SetBackdropColor(unpack(defaultColor))
+                    end
+                else
+                    container:SetBackdropColor(unpack(defaultColor))
+                end
+            end
+        end
+    end
+
+    if not listType then
+        self:ClearNameList()
+        return
+    end
+
+    if not self.nameListContent then
+        return
+    end
+
+    if listType == "guild" then
         if not self.guildCache or (GetTime() - self.lastGuildUpdate) > 15 then
             self.guildCache = {}
             local numGuild = GetNumGuildMembers() or 0
@@ -1389,7 +1418,9 @@ function RaidGroups:UpdateNameList(listType)
                         class = classToken,
                         rankIndex = rankIndex
                     })
-                    self.rosterMapping[displayName] = GetClassColor(classToken)
+                    if not self.rosterMapping[displayName] then
+                        self.rosterMapping[displayName] = GetClassColor(classToken)
+                    end
                 end
             end
             self.lastGuildUpdate = GetTime()
@@ -1397,13 +1428,13 @@ function RaidGroups:UpdateNameList(listType)
                 return a.rankIndex < b.rankIndex
             end)
         end
-        names = self.guildCache
+        namesForList = self.guildCache
     end
 
     local used = self:GetUsedNames()
     local yOffset = -2
     local index = 0
-    for _, player in ipairs(names) do
+    for _, player in ipairs(namesForList) do
         if not used[player.name] then
             index = index + 1
             local color = GetClassColor(player.class)
@@ -1430,6 +1461,7 @@ function RaidGroups:UpdateNameList(listType)
             yOffset = yOffset - 22
         end
     end
+
     local activeCount = index
     for i = activeCount + 1, #self.nameFrames do
         self.nameFrames[i]:Hide()
@@ -1718,15 +1750,13 @@ function RaidGroups:ApplyPreset(presetString)
             end
         end
     end
-    if self.currentListType then
-        self:UpdateNameList(self.currentListType)
-    end
+    self:UpdateNameList(self.currentListType)
 end
 
 local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
 eventFrame:SetScript("OnEvent", function(self, event, ...)
-    if RaidGroups and RaidGroups.currentListType then
+    if event == "GROUP_ROSTER_UPDATE" and RaidGroups then
         RaidGroups:UpdateNameList(RaidGroups.currentListType)
     end
 end)
