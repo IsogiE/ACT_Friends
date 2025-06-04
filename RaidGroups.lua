@@ -746,8 +746,13 @@ function RaidGroups:CreateConfigPanel(parent)
                         return
                     end
 
+                    local processedText = text:trim()
+                    if processedText:len() > 1 and processedText:sub(1, 1) == '"' and processedText:sub(-1) == '"' then
+                        processedText = processedText:sub(2, -2)
+                    end
+
                     local lines = {}
-                    for line in string.gmatch(text, "[^\r\n]+") do
+                    for line in string.gmatch(processedText, "[^\r\n]+") do
                         table.insert(lines, line)
                     end
 
